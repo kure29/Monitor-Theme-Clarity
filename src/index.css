@@ -169,21 +169,7 @@
 .group-tabs button { border-radius: 999px; }
 .group-tabs button[aria-pressed=true] { background: var(--primary); color: var(--primary-foreground); }
 .group-tabs button[aria-pressed=true] span { color: inherit; opacity: .78; }
-.section-heading { margin-top: 34px; }
-.view-switcher {
-  max-width: 100%; padding: 3px; border-radius: 11px;
-  background: color-mix(in srgb, var(--muted) 75%, var(--card));
-}
-.view-switcher button {
-  flex: none; padding: 7px 11px; border-radius: 8px;
-  color: var(--muted-foreground); font-size: 12px; font-weight: 600;
-  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
-}
-.view-switcher button[aria-pressed="true"] {
-  background: var(--card); color: var(--foreground);
-  box-shadow: 0 1px 4px #1c293a1a;
-}
-.view-switcher button:active { transform: scale(.98); }
+.node-section .node-grid, .node-section .node-table { margin-top: 22px; }
 .node-card {
   min-height: 286px;
   transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms ease;
@@ -268,8 +254,7 @@
   .summary-tile .tnum.text-3xl { font-size: 1.6rem; }
   .chart-panel { padding: 18px 12px; }
   .summary-grid .summary-tile:last-child .tnum.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .section-heading .view-switcher { width: 100%; }
-  .view-switcher button { flex: 1; padding-inline: 8px; }
+  .section-heading .group-tabs { width: 100%; }
   .mini-node-card { padding: 14px; }
   .mini-node-card h3 { font-size: 12px; }
   .settings-options { grid-template-columns: 1fr; }
@@ -288,7 +273,7 @@
   .list-node-value small { display: block; margin-bottom: 3px; color: var(--muted-foreground); font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .node-card, .compact-node-card, .mini-node-card, .meter-fill, .view-switcher button { transition: none; }
+  .node-card, .compact-node-card, .mini-node-card, .meter-fill { transition: none; }
   .node-card:hover, .node-card:active, .compact-node-card:hover, .compact-node-card:active, .mini-node-card:hover, .mini-node-card:active { transform: none; }
 }
 @media (prefers-reduced-transparency: reduce) {

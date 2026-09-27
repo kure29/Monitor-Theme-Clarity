@@ -44,13 +44,13 @@ export function ThemeSettings({ config, onClose, onSaved }: {
         <div className="flex items-start justify-between gap-5">
           <div>
             <h2 id="theme-settings-title" className="text-xl font-semibold">主题设置</h2>
-            <p className="mt-2 text-sm text-muted-foreground">保存后对所有访客生效；访客仍可临时选择自己的节点视图。</p>
+            <p className="mt-2 text-sm text-muted-foreground">保存后对所有访客生效。</p>
           </div>
           <button type="button" className="settings-close" onClick={onClose} aria-label="关闭主题设置"><X className="size-4" /></button>
         </div>
 
         <fieldset className="mt-7">
-          <legend className="text-sm font-semibold">默认节点视图</legend>
+          <legend className="text-sm font-semibold">节点展示方式</legend>
           <div className="settings-options mt-3 grid grid-cols-2 gap-2">
             {OPTIONS.map(({ mode, label, help }) => (
               <button

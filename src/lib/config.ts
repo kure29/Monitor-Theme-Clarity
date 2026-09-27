@@ -8,10 +8,6 @@ type Field = { key: string; type: string; default: unknown; options?: { value: s
 const fields = (manifest.config as Field[]).filter((field) => field.type !== "title")
 const url = `/api/themes/${manifest.short}/config`
 
-export function isViewMode(value: unknown): value is ViewMode {
-  return VIEW_MODES.some((mode) => mode === value)
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }

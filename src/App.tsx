@@ -8,16 +8,9 @@ import { ThemeSettings } from "@/components/ThemeSettings"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api, groupsOf, useNodes, type Node } from "@/lib/api"
-import { DEFAULT_CONFIG, isViewMode, loadConfig, type ThemeConfig, type ViewMode } from "@/lib/config"
+import { DEFAULT_CONFIG, loadConfig, type ThemeConfig, type ViewMode } from "@/lib/config"
 
 type Me = { authed: boolean; github: boolean; site_name: string; public_page: boolean }
-const LOCAL_VIEW_KEY = "clarity-node-view"
-const VIEW_OPTIONS: { mode: ViewMode; label: string }[] = [
-  { mode: "large", label: "大卡片" },
-  { mode: "compact", label: "小卡片" },
-  { mode: "mini", label: "迷你卡片" },
-  { mode: "list", label: "列表" },
-]
 
 // Split out because recharts is most of this bundle and the list page draws no
 // chart. The landing page is 242 kB rather than 629 kB (77 kB gzipped against
@@ -97,22 +90,10 @@ export default function App() {
   // The list's group tab, held here so it survives a visit to a node's page.
   const [group, setGroup] = useState<string | null>(null)
   const [siteConfig, setSiteConfig] = useState<ThemeConfig>(DEFAULT_CONFIG)
-  const [localView, setLocalView] = useState<ViewMode | null>(() => {
-    const stored = localStorage.getItem(LOCAL_VIEW_KEY)
-    return isViewMode(stored) ? stored : null
-  })
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const viewMode = localView ?? siteConfig.card_mode
-
-  function changeView(mode: ViewMode) {
-    localStorage.setItem(LOCAL_VIEW_KEY, mode)
-    setLocalView(mode)
-  }
 
   function applySettings(next: ThemeConfig) {
     setSiteConfig(next)
-    localStorage.removeItem(LOCAL_VIEW_KEY)
-    setLocalView(null)
     setSettingsOpen(false)
   }
 
@@ -220,7 +201,7 @@ export default function App() {
             ))}
           </div>
         ) : (
-          <NodeList nodes={sorted} group={group} onGroup={setGroup} onOpen={go} mode={viewMode} onModeChange={changeView} showSummary={siteConfig.show_summary} />
+          <NodeList nodes={sorted} group={group} onGroup={setGroup} onOpen={go} mode={siteConfig.card_mode} showSummary={siteConfig.show_summary} />
         )}
       </main>
       {settingsOpen && me.authed && <ThemeSettings config={siteConfig} onClose={() => setSettingsOpen(false)} onSaved={applySettings} />}
@@ -228,16 +209,14 @@ export default function App() {
   )
 }
 
-// Group tabs appear only once the operator has grouped something, so a hub
-// without groups keeps the page it always had. The summary follows the tab.
-function NodeList({ nodes, group, onGroup, onOpen, mode, onModeChange, showSummary }: {
+// Group tabs sit beside the node heading, while the summary follows the selection.
+function NodeList({ nodes, group, onGroup, onOpen, mode, showSummary }: {
   nodes: Node[]
   /** null is every node, "" the ungrouped. */
   group: string | null
   onGroup: (group: string | null) => void
   onOpen: (id: number) => void
   mode: ViewMode
-  onModeChange: (mode: ViewMode) => void
   showSummary: boolean
 }) {
   const groups = groupsOf(nodes)
@@ -257,52 +236,47 @@ function NodeList({ nodes, group, onGroup, onOpen, mode, onModeChange, showSumma
   ]
   return (
     <>
-      {groups.length > 0 && (
-        <div role="group" aria-label="分组" className="group-tabs -mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
-          {tabs.map(([value, label, count]) => (
-            <Button
-              // Group names are free text, so they carry a prefix no key of
-              // the 全部 tab can share.
-              key={value === null ? "*" : `=${value}`}
-              aria-pressed={current === value}
-              size="sm"
-              variant={current === value ? "secondary" : "ghost"}
-              className="shrink-0"
-              onClick={() => onGroup(value)}
-            >
-              {label}
-              <span className="tnum text-muted-foreground">{count}</span>
-            </Button>
-          ))}
-        </div>
-      )}
       {showSummary && <Summary nodes={shown} group={current} />}
-      <div className="section-heading flex flex-wrap items-end justify-between gap-4">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-xl font-semibold tracking-tight">节点</h1>
-          <span className="text-sm text-muted-foreground">{shown.length} 台设备</span>
+      <section className="node-section">
+        <div className="section-heading flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-xl font-semibold tracking-tight">节点</h1>
+            <span className="text-sm text-muted-foreground">{shown.length} 台设备</span>
+          </div>
+          <div role="group" aria-label="分组" className="group-tabs -mx-1 flex max-w-full gap-1 overflow-x-auto px-1 pb-1">
+            {tabs.map(([value, label, count]) => (
+              <Button
+                // Group names are free text, so they carry a prefix no key of
+                // the 全部 tab can share.
+                key={value === null ? "*" : `=${value}`}
+                aria-pressed={current === value}
+                size="sm"
+                variant={current === value ? "secondary" : "ghost"}
+                className="shrink-0"
+                onClick={() => onGroup(value)}
+              >
+                {label}
+                <span className="tnum text-muted-foreground">{count}</span>
+              </Button>
+            ))}
+          </div>
         </div>
-        <div className="view-switcher flex gap-1 overflow-x-auto" role="group" aria-label="节点视图">
-          {VIEW_OPTIONS.map((option) => (
-            <button key={option.mode} type="button" aria-pressed={mode === option.mode} onClick={() => onModeChange(option.mode)}>{option.label}</button>
-          ))}
-        </div>
-      </div>
-      {nodes.length === 0 ? (
-        <p className="py-16 text-center text-sm text-muted-foreground">还没有节点</p>
-      ) : mode === "list" ? (
-        <NodeRows nodes={shown} onOpen={onOpen} />
-      ) : (
-        <div className={`node-grid grid items-start gap-4 ${mode === "mini" ? "grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 xl:grid-cols-3"}`}>
-          {shown.map((n) => (
-            mode === "large"
-              ? <NodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
-              : mode === "compact"
-                ? <CompactNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
-                : <MiniNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
-          ))}
-        </div>
-      )}
+        {nodes.length === 0 ? (
+          <p className="py-16 text-center text-sm text-muted-foreground">还没有节点</p>
+        ) : mode === "list" ? (
+          <NodeRows nodes={shown} onOpen={onOpen} />
+        ) : (
+          <div className={`node-grid grid items-start gap-4 ${mode === "mini" ? "grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 xl:grid-cols-3"}`}>
+            {shown.map((n) => (
+              mode === "large"
+                ? <NodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
+                : mode === "compact"
+                  ? <CompactNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
+                  : <MiniNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
+            ))}
+          </div>
+        )}
+      </section>
     </>
   )
 }

@@ -2,9 +2,9 @@
   "name": "Clarity",
   "short": "clarity",
   "description": "简洁、清晰的公开状态页，支持多种节点视图与站点级设置",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "kure29",
-  "url": "https://github.com/kure29/Monitor-Theme-Apple",
+  "url": "https://github.com/kure29/Monitor-Theme-Clarity",
   "config": [
     { "type": "title", "label": "节点展示" },
     {

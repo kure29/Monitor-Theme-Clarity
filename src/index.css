@@ -1,0 +1,296 @@
+/* Scan this app's own source and nothing else. Tailwind's automatic detection
+   walks the whole repository, turning a word in a Rust file or a document into a
+   utility class in the shipped stylesheet: `.filter` and `.transform` were
+   here because api.rs calls `.filter(...)`. Worse than the wasted bytes, it
+   made the build depend on files that have nothing to do with it -- adding an
+   unrelated workflow changed the CSS, and with it the content hash of every
+   asset. */
+@import "tailwindcss" source(none);
+@source "../index.html";
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 1rem;
+  --background: #f5f6f8;
+  --foreground: #1d1d1f;
+  --card: oklch(1 0 0);
+  --card-foreground: #1d1d1f;
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: #1868d6;
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: #e8eef7;
+  --secondary-foreground: #1557b3;
+  --muted: #e8ebef;
+  --muted-foreground: #626974;
+  --accent: #edf2f9;
+  --accent-foreground: #1d1d1f;
+  --destructive: #b4232e;
+  --border: #dfe3e8;
+  --input: #dfe3e8;
+  --ring: #2b7de9;
+  --chart-1: #2778dd;
+  --chart-2: #36a7a2;
+  --chart-3: #8b73d5;
+  --chart-4: #d28b43;
+  --chart-5: #758399;
+  /* Status and capacity use restrained color to stay legible at a glance. */
+  --ok: #267f72;
+  --warn: #a76412;
+  /* The status dot. Each clears 3:1 against the card (3.7 and 5.5), and 1.5:1
+     against the other, the separation red-green colour blindness still
+     perceives. */
+  --online: #25866c;
+  --offline: #a56754;
+}
+
+.dark {
+  --background: #111318;
+  --foreground: #f4f6fa;
+  --card: #1c2028;
+  --card-foreground: #f4f6fa;
+  --popover: #242a34;
+  --popover-foreground: #f4f6fa;
+  --primary: #75afff;
+  --primary-foreground: #101b2e;
+  --secondary: #293a52;
+  --secondary-foreground: #d4e5ff;
+  --muted: #313742;
+  --muted-foreground: #abb4c2;
+  --accent: #293341;
+  --accent-foreground: #f4f6fa;
+  --destructive: #ff9298;
+  --border: #3a424e;
+  --input: #3a424e;
+  --ring: #80b9ff;
+  --chart-1: #7db6ff;
+  --chart-2: #6bd5ca;
+  --chart-3: #b6a4ff;
+  --chart-4: #f1bd80;
+  --chart-5: #aab9cd;
+  /* Lighter hues preserve separation against the dark surface. */
+  --ok: #65cbbb;
+  --warn: #efbd78;
+  /* 7.8 and 3.7 against the card, 2.1 apart. The muted grey would sit 1.15 from
+     the green. */
+  --online: #6dd7ae;
+  --offline: #eea387;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-online: var(--online);
+  --color-offline: var(--offline);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  /* Reserve the scrollbar's width on every page: without it, leaving a route
+     whose content exceeds the fold widens the page. */
+  html { scrollbar-gutter: stable; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: #c7defe; color: #143e78; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+}
+
+/* Tabular figures keep live numbers from shifting as they update. */
+.tnum { font-variant-numeric: tabular-nums; }
+
+.app-shell {
+  background: radial-gradient(ellipse 1100px 480px at 50% -220px, #e5edfa 0, transparent 75%), var(--background);
+}
+.dark .app-shell {
+  background: radial-gradient(ellipse 1100px 480px at 50% -230px, #202d42 0, transparent 75%), var(--background);
+}
+.app-header {
+  background: color-mix(in srgb, var(--background) 80%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+}
+.brand-mark { letter-spacing: -.025em; }
+.header-divider { width: 1px; height: 18px; background: var(--border); }
+.header-action { border-radius: 10px; }
+.surface-card, .detail-facts, .chart-panel {
+  border-radius: 16px;
+  box-shadow: 0 8px 28px #1c293a0b, 0 2px 6px #1c293a08;
+}
+.dark .surface-card, .dark .detail-facts, .dark .chart-panel {
+  box-shadow: 0 10px 30px #00000026;
+}
+.summary-tile { min-height: 148px; }
+.summary-grid .summary-tile:last-child { grid-column: span 2; }
+@media (min-width: 1024px) {
+  .summary-grid .summary-tile:last-child { grid-column: auto; }
+}
+.summary-grid .summary-tile:first-child {
+  background: #e9f2ff;
+}
+.dark .summary-grid .summary-tile:first-child { background: #1f314b; }
+.summary-grid .summary-tile:first-child [class*=text-muted-foreground] { color: #375a88; }
+.dark .summary-grid .summary-tile:first-child [class*=text-muted-foreground] { color: #bbd4f4; }
+.summary-tile svg { color: var(--primary); }
+.summary-tile .tnum { font-variant-numeric: tabular-nums; }
+.group-tabs button { border-radius: 999px; }
+.group-tabs button[aria-pressed=true] { background: var(--primary); color: var(--primary-foreground); }
+.group-tabs button[aria-pressed=true] span { color: inherit; opacity: .78; }
+.section-heading { margin-top: 34px; }
+.view-switcher {
+  max-width: 100%; padding: 3px; border-radius: 11px;
+  background: color-mix(in srgb, var(--muted) 75%, var(--card));
+}
+.view-switcher button {
+  flex: none; padding: 7px 11px; border-radius: 8px;
+  color: var(--muted-foreground); font-size: 12px; font-weight: 600;
+  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+.view-switcher button[aria-pressed="true"] {
+  background: var(--card); color: var(--foreground);
+  box-shadow: 0 1px 4px #1c293a1a;
+}
+.view-switcher button:active { transform: scale(.98); }
+.node-card {
+  min-height: 286px;
+  transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .node-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px #1c293a18; }
+}
+.node-card:active { transform: scale(.99); }
+.compact-node-card, .mini-node-card {
+  display: block; width: 100%; padding: 20px;
+  transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms ease;
+}
+.compact-node-card { min-height: 170px; }
+.mini-node-card { min-height: 132px; padding: 17px; }
+.resource-fill { background: var(--primary); }
+.mini-status-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; }
+.mini-status-dot.online { background: var(--online); }
+.mini-status-dot.offline { background: var(--offline); }
+.mini-label { display: block; color: var(--muted-foreground); font-size: 11px; }
+.mini-value { display: block; margin-top: 3px; font-size: 15px; }
+@media (hover: hover) and (pointer: fine) {
+  .compact-node-card:hover, .mini-node-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px #1c293a18; }
+}
+.compact-node-card:active, .mini-node-card:active { transform: scale(.99); }
+.node-table {
+  overflow: hidden; border-radius: 16px; background: var(--card);
+  box-shadow: 0 8px 28px #1c293a0b, 0 2px 6px #1c293a08;
+}
+.node-table-head, .list-node-row {
+  display: grid; grid-template-columns: minmax(190px, 2fr) minmax(135px, 1fr) repeat(3, minmax(75px, .75fr)) minmax(95px, 1fr);
+  align-items: center; gap: 16px;
+}
+.node-table-head {
+  padding: 15px 20px; color: var(--muted-foreground); background: var(--accent);
+  font-size: 11px; font-weight: 600;
+}
+.list-node-row {
+  width: 100%; padding: 15px 20px; border-top: 1px solid var(--border);
+  text-align: left; font-size: 13px; transition: background-color 150ms ease;
+}
+.list-node-row:hover { background: var(--accent); }
+.list-node-row:active { background: var(--secondary); }
+.list-node-identity strong { font-size: 13px; font-weight: 600; }
+.list-node-identity small { margin-top: 3px; font-size: 11px; }
+.list-node-value small { display: none; }
+.theme-settings-dialog {
+  width: min(92vw, 550px); max-height: min(85vh, 720px); overflow-y: auto;
+  margin: auto; padding: 28px; border: 0; border-radius: 20px;
+  background: var(--card); color: var(--foreground);
+  box-shadow: 0 25px 80px #0a142c4d;
+}
+.theme-settings-dialog::backdrop { background: #0c162b80; backdrop-filter: blur(5px); }
+.settings-close { display: grid; place-items: center; width: 30px; height: 30px; flex: none; border-radius: 9px; background: var(--muted); }
+.settings-option {
+  min-height: 78px; padding: 13px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--card); font-size: 13px;
+}
+.settings-option[aria-pressed="true"] { border-color: var(--primary); background: var(--secondary); color: var(--secondary-foreground); }
+.settings-option small { font-size: 11px; line-height: 1.4; }
+.settings-toggle { padding: 18px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.settings-toggle small { font-size: 11px; }
+.settings-toggle input { width: 18px; height: 18px; accent-color: var(--primary); }
+.settings-secondary, .settings-primary { padding: 9px 15px; border-radius: 9px; font-size: 13px; font-weight: 600; }
+.settings-secondary { background: var(--muted); }
+.settings-primary { background: var(--primary); color: var(--primary-foreground); }
+.settings-primary:disabled { opacity: .6; cursor: wait; }
+.status-badge { background: var(--accent); border: 0; padding: 5px 9px; }
+.meter-track { background: var(--muted); }
+.meter-fill { background: var(--primary); }
+.node-card .meter-track:nth-child(2n) .meter-fill { background: var(--chart-2); }
+.back-link { color: var(--primary); }
+.back-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.detail-facts, .chart-panel { background: var(--card); }
+.detail-facts dt { margin-bottom: 5px; }
+.detail-facts dd { font-weight: 500; }
+.detail-controls { border-top: 1px solid var(--border); }
+.chart-panel { padding: 24px; }
+.detail-tab:active { transform: scale(.97); }
+
+@media (max-width: 639px) {
+  .summary-tile { min-height: 146px; }
+  .summary-tile .tnum.text-3xl { font-size: 1.6rem; }
+  .chart-panel { padding: 18px 12px; }
+  .summary-grid .summary-tile:last-child .tnum.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .section-heading .view-switcher { width: 100%; }
+  .view-switcher button { flex: 1; padding-inline: 8px; }
+  .mini-node-card { padding: 14px; }
+  .mini-node-card h3 { font-size: 12px; }
+  .settings-options { grid-template-columns: 1fr; }
+  .theme-settings-dialog { padding: 22px; }
+}
+@media (max-width: 767px) {
+  .node-table { background: transparent; box-shadow: none; }
+  .node-table-head { display: none; }
+  .list-node-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+    margin-bottom: 10px; padding: 17px; border: 0; border-radius: 14px;
+    background: var(--card); box-shadow: 0 4px 14px #1c293a0b;
+  }
+  .list-node-identity { grid-column: 1 / -1; }
+  .list-node-status { grid-column: 1 / -1; }
+  .list-node-value small { display: block; margin-bottom: 3px; color: var(--muted-foreground); font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .node-card, .compact-node-card, .mini-node-card, .meter-fill, .view-switcher button { transition: none; }
+  .node-card:hover, .node-card:active, .compact-node-card:hover, .compact-node-card:active, .mini-node-card:hover, .mini-node-card:active { transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .app-header { background: var(--background); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}

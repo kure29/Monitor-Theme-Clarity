@@ -1,0 +1,308 @@
+import { lazy, Suspense, useCallback, useEffect, useState, useSyncExternalStore } from "react"
+import { ArrowLeft, Moon, Settings2, Sun } from "lucide-react"
+
+import { NodeCard } from "@/components/NodeCard"
+import { CompactNodeCard, MiniNodeCard, NodeRows } from "@/components/NodeViews"
+import { Summary } from "@/components/Summary"
+import { ThemeSettings } from "@/components/ThemeSettings"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { api, groupsOf, useNodes, type Node } from "@/lib/api"
+import { DEFAULT_CONFIG, isViewMode, loadConfig, type ThemeConfig, type ViewMode } from "@/lib/config"
+
+type Me = { authed: boolean; github: boolean; site_name: string; public_page: boolean }
+const LOCAL_VIEW_KEY = "clarity-node-view"
+const VIEW_OPTIONS: { mode: ViewMode; label: string }[] = [
+  { mode: "large", label: "大卡片" },
+  { mode: "compact", label: "小卡片" },
+  { mode: "mini", label: "迷你卡片" },
+  { mode: "list", label: "列表" },
+]
+
+// Split out because recharts is most of this bundle and the list page draws no
+// chart. The landing page is 242 kB rather than 629 kB (77 kB gzipped against
+// 188 kB), with the rest fetched immediately after it paints.
+const loadDetail = () => import("@/components/NodeDetail").then((m) => ({ default: m.NodeDetail }))
+const NodeDetail = lazy(loadDetail)
+
+// `/node/{id}` is a real page: it survives a reload, can be linked to, and back
+// leaves the detail view rather than the site. The hub serves index.html for any
+// unknown path, so no server-side route is required.
+function useNodeRoute() {
+  const read = () => {
+    const match = location.pathname.match(/^\/node\/(\d+)/)
+    return match ? Number(match[1]) : null
+  }
+  const [id, setId] = useState(read)
+  useEffect(() => {
+    const sync = () => setId(read())
+    addEventListener("popstate", sync)
+    return () => removeEventListener("popstate", sync)
+  }, [])
+  return [
+    id,
+    (next: number | null) => {
+      history.pushState({}, "", next === null ? "/" : `/node/${next}`)
+      setId(next)
+      scrollTo(0, 0)
+    },
+  ] as const
+}
+
+const DARK_MEDIA = matchMedia("(prefers-color-scheme: dark)")
+
+/**
+ * The visitor's own choice, or the system's while there is none. Only the toggle
+ * writes the choice down: persisting the system's answer on load would pin it,
+ * leaving a visitor who never touched the toggle in whichever mode their system
+ * happened to be in that day. The panel at `/admin/` shares this key on one
+ * origin, so it has to hold to the same rule -- one app writing on load pins the
+ * others.
+ *
+ * The system's answer is subscribed to rather than copied into state: a flip
+ * landing between the first render and the effect that would have attached the
+ * listener is otherwise never heard, and the next one is a day away.
+ */
+function useTheme() {
+  const [saved, setSaved] = useState(() => localStorage.getItem("theme"))
+  const system = useSyncExternalStore(
+    (notify) => {
+      DARK_MEDIA.addEventListener("change", notify)
+      return () => DARK_MEDIA.removeEventListener("change", notify)
+    },
+    () => DARK_MEDIA.matches,
+  )
+  const dark = saved ? saved === "dark" : system
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark)
+  }, [dark])
+
+  return [
+    dark,
+    () => {
+      const next = dark ? "light" : "dark"
+      localStorage.setItem("theme", next)
+      setSaved(next)
+    },
+  ] as const
+}
+
+export default function App() {
+  const [dark, toggleTheme] = useTheme()
+  const [me, setMe] = useState<Me | null>(null)
+  const [meError, setMeError] = useState("")
+  const { nodes, error, closed } = useNodes()
+  const [open, go] = useNodeRoute()
+  // The list's group tab, held here so it survives a visit to a node's page.
+  const [group, setGroup] = useState<string | null>(null)
+  const [siteConfig, setSiteConfig] = useState<ThemeConfig>(DEFAULT_CONFIG)
+  const [localView, setLocalView] = useState<ViewMode | null>(() => {
+    const stored = localStorage.getItem(LOCAL_VIEW_KEY)
+    return isViewMode(stored) ? stored : null
+  })
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const viewMode = localView ?? siteConfig.card_mode
+
+  function changeView(mode: ViewMode) {
+    localStorage.setItem(LOCAL_VIEW_KEY, mode)
+    setLocalView(mode)
+  }
+
+  function applySettings(next: ThemeConfig) {
+    setSiteConfig(next)
+    localStorage.removeItem(LOCAL_VIEW_KEY)
+    setLocalView(null)
+    setSettingsOpen(false)
+  }
+
+  const loadMe = useCallback(() => {
+    return api<Me>("/me")
+      .then((next) => { setMe(next); setMeError("") })
+      .catch((e: Error) => setMeError(e.message))
+  }, [])
+
+  useEffect(() => {
+    loadMe()
+    // Warmed here rather than left to Suspense, which requests the chunk only
+    // once a render reaches the detail view, itself waiting on /me. Without this
+    // the split trades its first paint for a full-page skeleton over the first
+    // node opened: 2.6s click-to-chart on 4G against 1.4s unsplit, 1.7s warm.
+    void loadDetail()
+  }, [loadMe])
+
+  useEffect(() => {
+    let active = true
+    void loadConfig().then((next) => { if (active) setSiteConfig(next) })
+    return () => { active = false }
+  }, [])
+
+  // The status page was closed while this tab was open. `me` holds whatever it
+  // reported at load, so it is re-queried; the effect below then directs an
+  // anonymous visitor to the panel rather than leaving them on a list that
+  // stopped updating with only a red line to explain it.
+  useEffect(() => {
+    if (closed) void loadMe()
+  }, [closed, loadMe])
+
+  useEffect(() => {
+    if (me && !me.public_page && !me.authed) location.href = "/admin/"
+  }, [me])
+
+  const sorted = [...(nodes ?? [])].sort((a, b) => a.sort - b.sort || a.id - b.id)
+  const selected = sorted.find((n) => n.id === open)
+
+  // `/node/{id}` is a page people bookmark and share, so the tab needs the node's
+  // name. The site name rather than a fixed string, since the hub lets an operator
+  // rename the site.
+  useEffect(() => {
+    document.title = [selected?.name, me?.site_name || "Monitor"].filter(Boolean).join(" · ")
+  }, [selected?.name, me?.site_name])
+
+  // Only while there is nothing else to show. Once `me` has loaded, a later
+  // failure belongs beside the page rather than over it.
+  if (!me) return (
+    <div className="grid min-h-svh place-items-center p-6 text-sm text-muted-foreground">
+      {meError ? <div className="space-y-3 text-center"><p role="alert">加载失败：{meError}</p><Button onClick={loadMe}>重试</Button></div> : "加载中…"}
+    </div>
+  )
+
+  // The status page is closed and nobody is signed in: redirect to the panel.
+  if (!me.public_page && !me.authed) return null
+
+  return (
+    <div className="app-shell min-h-svh">
+      <header className="app-header sticky top-0 z-10">
+        <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-5 py-4 sm:px-8">
+          {/* The site name is the way back to the list, so a node page needs
+              no back button of its own. */}
+          <button className="brand-mark min-w-0 truncate font-semibold transition-opacity hover:opacity-70" onClick={() => go(null)}>
+            {me.site_name || "Monitor"}
+          </button>
+          <span className="header-divider hidden sm:block" aria-hidden />
+          <span className="hidden text-sm text-muted-foreground sm:block">状态概览</span>
+          <div className="flex-1" />
+          {me.authed && (
+            <Button variant="ghost" size="sm" onClick={() => setSettingsOpen(true)} className="header-action" aria-label="主题设置">
+              <Settings2 /><span className="hidden sm:inline">主题设置</span>
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={toggleTheme} title="切换主题" aria-label="切换主题" className="header-action">
+            {dark ? <Sun /> : <Moon />}
+          </Button>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-[1360px] space-y-7 px-5 py-9 sm:px-8 sm:py-12">
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {open !== null && (
+          <button className="back-link inline-flex items-center gap-2 text-sm" onClick={() => go(null)}>
+            <ArrowLeft className="size-4" /> 返回概览
+          </button>
+        )}
+        {open !== null ? (
+          !nodes ? (
+            <Skeleton className="h-96" />
+          ) : selected ? (
+            <Suspense fallback={<Skeleton className="h-96" />}>
+              <NodeDetail node={selected} />
+            </Suspense>
+          ) : (
+            <p className="py-16 text-center text-sm text-muted-foreground">
+              节点不存在或未公开。<button className="underline" onClick={() => go(null)}>返回列表</button>
+            </p>
+          )
+        ) : !nodes ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-72" />
+            ))}
+          </div>
+        ) : (
+          <NodeList nodes={sorted} group={group} onGroup={setGroup} onOpen={go} mode={viewMode} onModeChange={changeView} showSummary={siteConfig.show_summary} />
+        )}
+      </main>
+      {settingsOpen && me.authed && <ThemeSettings config={siteConfig} onClose={() => setSettingsOpen(false)} onSaved={applySettings} />}
+    </div>
+  )
+}
+
+// Group tabs appear only once the operator has grouped something, so a hub
+// without groups keeps the page it always had. The summary follows the tab.
+function NodeList({ nodes, group, onGroup, onOpen, mode, onModeChange, showSummary }: {
+  nodes: Node[]
+  /** null is every node, "" the ungrouped. */
+  group: string | null
+  onGroup: (group: string | null) => void
+  onOpen: (id: number) => void
+  mode: ViewMode
+  onModeChange: (mode: ViewMode) => void
+  showSummary: boolean
+}) {
+  const groups = groupsOf(nodes)
+  const ungrouped = nodes.filter((n) => !n.group).length
+  // A tab that has since emptied or been renamed -- 未分组 included -- falls back
+  // to every node rather than to an empty page, and is forgotten, so a later
+  // group of the same name does not take the page over.
+  const current = group === null || (group === "" ? ungrouped > 0 : groups.includes(group)) ? group : null
+  useEffect(() => {
+    if (current !== group) onGroup(current)
+  }, [current, group, onGroup])
+  const shown = current === null ? nodes : nodes.filter((n) => (n.group ?? "") === current)
+  const tabs = [
+    [null, "全部", nodes.length] as const,
+    ...groups.map((g) => [g, g, nodes.filter((n) => n.group === g).length] as const),
+    ...(ungrouped ? [["", "未分组", ungrouped] as const] : []),
+  ]
+  return (
+    <>
+      {groups.length > 0 && (
+        <div role="group" aria-label="分组" className="group-tabs -mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+          {tabs.map(([value, label, count]) => (
+            <Button
+              // Group names are free text, so they carry a prefix no key of
+              // the 全部 tab can share.
+              key={value === null ? "*" : `=${value}`}
+              aria-pressed={current === value}
+              size="sm"
+              variant={current === value ? "secondary" : "ghost"}
+              className="shrink-0"
+              onClick={() => onGroup(value)}
+            >
+              {label}
+              <span className="tnum text-muted-foreground">{count}</span>
+            </Button>
+          ))}
+        </div>
+      )}
+      {showSummary && <Summary nodes={shown} group={current} />}
+      <div className="section-heading flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-xl font-semibold tracking-tight">节点</h1>
+          <span className="text-sm text-muted-foreground">{shown.length} 台设备</span>
+        </div>
+        <div className="view-switcher flex gap-1 overflow-x-auto" role="group" aria-label="节点视图">
+          {VIEW_OPTIONS.map((option) => (
+            <button key={option.mode} type="button" aria-pressed={mode === option.mode} onClick={() => onModeChange(option.mode)}>{option.label}</button>
+          ))}
+        </div>
+      </div>
+      {nodes.length === 0 ? (
+        <p className="py-16 text-center text-sm text-muted-foreground">还没有节点</p>
+      ) : mode === "list" ? (
+        <NodeRows nodes={shown} onOpen={onOpen} />
+      ) : (
+        <div className={`node-grid grid items-start gap-4 ${mode === "mini" ? "grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 xl:grid-cols-3"}`}>
+          {shown.map((n) => (
+            mode === "large"
+              ? <NodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
+              : mode === "compact"
+                ? <CompactNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
+                : <MiniNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
+          ))}
+        </div>
+      )}
+    </>
+  )
+}

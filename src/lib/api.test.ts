@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import assert from "node:assert/strict"
-import { groupsOf, safeNodes, sample, speedHistory, type Node } from "./api.ts"
+import { groupsOf, isDataStale, safeNodes, sample, speedHistory, STALE_AFTER_MS, type Node } from "./api.ts"
 
 const node = { id: 1, metrics: { uptime: 100, cpu: 1, load: [0.1, 0.2, 0.3],
   mem_total: 1024, mem_used: 512, swap_total: 0, swap_used: 0, disk_total: 2048, disk_used: 1024,
@@ -30,3 +30,8 @@ assert.equal(speedHistory.has("东京"), false)
 sample([live("*", 5), live("", 7)])
 assert.deepEqual([speedHistory.get(null)?.at(-1)?.rx, speedHistory.get("*")?.at(-1)?.rx], [12, 5])
 console.log("throughput is kept per group")
+
+assert.equal(isDataStale(null, 20_000), false)
+assert.equal(isDataStale(1_000, 1_000 + STALE_AFTER_MS - 1), false)
+assert.equal(isDataStale(1_000, 1_000 + STALE_AFTER_MS), true)
+console.log("data freshness changes only after the last successful update expires")

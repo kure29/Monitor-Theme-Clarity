@@ -160,6 +160,13 @@ export function safeNodes(nodes: Node[]): Node[] {
   })
 }
 
+/** The hub normally pushes every two seconds; polling recovers every five. */
+export const STALE_AFTER_MS = 15_000
+
+export function isDataStale(lastUpdated: number | null, now: number): boolean {
+  return lastUpdated !== null && now - lastUpdated >= STALE_AFTER_MS
+}
+
 /**
  * Live node list. Uses the WebSocket the hub pushes every two seconds, falling
  * back to polling if it cannot be established.
@@ -167,6 +174,7 @@ export function safeNodes(nodes: Node[]): Node[] {
 export function useNodes() {
   const [nodes, setNodes] = useState<Node[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   // Set when the hub answers 401: the status page has been closed to anonymous
   // callers since this tab loaded. The hub also ends the stream, so this surfaces
   // on the fallback fetch the reconnect starts; a close allows a client to
@@ -177,12 +185,16 @@ export function useNodes() {
     let socket: WebSocket | null = null
     let poll: ReturnType<typeof setInterval> | null = null
     let retry: ReturnType<typeof setTimeout> | null = null
+    let watchdog: ReturnType<typeof setInterval> | null = null
     let closed = false
+    let lastReceipt = Date.now()
 
     const receive = (list: Node[]) => {
       const safe = safeNodes(list)
       sample(safe)
       setNodes(safe)
+      lastReceipt = Date.now()
+      setLastUpdated(lastReceipt)
       setError(null)
       setClosed(false)
     }
@@ -195,6 +207,14 @@ export function useNodes() {
           if (e instanceof ApiError && e.status === 401) setClosed(true)
         })
 
+    // A socket can remain open without delivering messages. Poll until pushes
+    // resume so a silent stream cannot leave the page frozen indefinitely.
+    const startPolling = () => {
+      if (poll) return
+      void fetchOnce()
+      poll = setInterval(fetchOnce, 5000)
+    }
+
     fetchOnce()
 
     const url = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/ws`
@@ -205,11 +225,17 @@ export function useNodes() {
       try {
         socket = new WebSocket(url)
       } catch {
-        poll ??= setInterval(fetchOnce, 5000)
+        startPolling()
         return
       }
       socket.onmessage = (event) => {
-        receive(JSON.parse(event.data).nodes)
+        try {
+          const message = JSON.parse(event.data) as { nodes: Node[] }
+          if (!Array.isArray(message.nodes)) return
+          receive(message.nodes)
+        } catch {
+          return
+        }
         // The stream has returned; the poll was only covering for it.
         if (poll) {
           clearInterval(poll)
@@ -219,19 +245,23 @@ export function useNodes() {
       socket.onerror = () => socket?.close()
       socket.onclose = () => {
         if (closed) return
-        poll ??= setInterval(fetchOnce, 5000)
+        startPolling()
         retry = setTimeout(connect, 5000)
       }
     }
     connect()
+    watchdog = setInterval(() => {
+      if (Date.now() - lastReceipt >= 10_000) startPolling()
+    }, 5000)
 
     return () => {
       closed = true
       socket?.close()
       if (poll) clearInterval(poll)
       if (retry) clearTimeout(retry)
+      if (watchdog) clearInterval(watchdog)
     }
   }, [])
 
-  return { nodes, error, closed }
+  return { nodes, error, closed, lastUpdated }
 }

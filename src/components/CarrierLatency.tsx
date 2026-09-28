@@ -3,10 +3,11 @@ import { useEffect, useRef, useState } from "react"
 import { probeReadings, loadCarrierHistory, type PingHistory } from "@/lib/carrierLatency"
 import { cn } from "@/lib/utils"
 
-export function CarrierLatency({ nodeId, online, compact = false }: {
+export function CarrierLatency({ nodeId, online, compact = false, limit }: {
   nodeId: number
   online: boolean
   compact?: boolean
+  limit?: number
 }) {
   const target = useRef<HTMLSpanElement>(null)
   const [visible, setVisible] = useState(false)
@@ -36,7 +37,7 @@ export function CarrierLatency({ nodeId, online, compact = false }: {
   }, [nodeId, visible])
 
   const readings = probeReadings(history)
-  const shown = compact ? readings?.slice(0, 3) : readings
+  const shown = readings?.slice(0, limit ?? (compact ? 3 : undefined))
   const remaining = readings ? readings.length - (shown?.length ?? 0) : 0
   return (
     <span ref={target} className={cn("carrier-latency-anchor", compact && "carrier-latency-compact")}>

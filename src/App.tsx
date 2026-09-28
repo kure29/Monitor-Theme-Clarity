@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react"
-import { ArrowLeft, LayoutDashboard, Moon, Settings2, Sun } from "lucide-react"
+import { ArrowLeft, LayoutDashboard, Moon, Settings2, Sun, WifiOff } from "lucide-react"
 
 import { NodeCard } from "@/components/NodeCard"
 import { CompactNodeCard, MiniNodeCard, NodeRows } from "@/components/NodeViews"
@@ -7,7 +7,7 @@ import { Summary } from "@/components/Summary"
 import { ThemeSettings } from "@/components/ThemeSettings"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { api, groupsOf, useNodes, type Node } from "@/lib/api"
+import { api, groupsOf, isDataStale, STALE_AFTER_MS, useNodes, type Node } from "@/lib/api"
 import { DEFAULT_CONFIG, loadConfig, type ThemeConfig } from "@/lib/config"
 
 type Me = { authed: boolean; github: boolean; site_name: string; public_page: boolean }
@@ -85,13 +85,23 @@ export default function App() {
   const [dark, toggleTheme] = useTheme()
   const [me, setMe] = useState<Me | null>(null)
   const [meError, setMeError] = useState("")
-  const { nodes, error, closed } = useNodes()
+  const { nodes, error, closed, lastUpdated } = useNodes()
   const [open, go] = useNodeRoute()
   // The list's group tab, held here so it survives a visit to a node's page.
   const [group, setGroup] = useState<string | null>(null)
   const [siteConfig, setSiteConfig] = useState<ThemeConfig>(DEFAULT_CONFIG)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [headerScrolled, setHeaderScrolled] = useState(false)
+  const [now, setNow] = useState(Date.now)
+
+  useEffect(() => {
+    if (lastUpdated === null) return
+    const tick = () => setNow(Date.now())
+    const timer = window.setTimeout(tick, Math.max(0, lastUpdated + STALE_AFTER_MS - Date.now()) + 20)
+    document.addEventListener("visibilitychange", tick)
+    return () => { window.clearTimeout(timer); document.removeEventListener("visibilitychange", tick) }
+  }, [lastUpdated])
+  const stale = isDataStale(lastUpdated, now)
 
   useEffect(() => {
     const sync = () => setHeaderScrolled(scrollY > 8)
@@ -164,7 +174,6 @@ export default function App() {
       className={`app-shell min-h-svh ${siteConfig.background_image_url ? "has-background-image" : ""}`}
       style={{
         "--surface-opacity": `${100 - siteConfig.global_transparency}%`,
-        "--header-opacity": `${100 - siteConfig.global_transparency}%`,
       } as CSSProperties}
     >
       {siteConfig.background_image_url && <BackgroundImage key={siteConfig.background_image_url} url={siteConfig.background_image_url} />}
@@ -195,7 +204,7 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-[1360px] space-y-7 px-5 py-9 sm:px-8 sm:py-12">
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        <FreshnessNotice error={error} lastUpdated={lastUpdated} stale={stale} />
 
         {open !== null && (
           <button className="back-link inline-flex items-center gap-2 text-sm" onClick={() => go(null)}>
@@ -221,10 +230,27 @@ export default function App() {
             ))}
           </div>
         ) : (
-          <NodeList nodes={sorted} group={group} onGroup={setGroup} onOpen={go} config={siteConfig} />
+          <NodeList nodes={sorted} group={group} onGroup={setGroup} onOpen={go} config={siteConfig} stale={stale} />
         )}
       </main>
       {settingsOpen && me.authed && <ThemeSettings config={siteConfig} onClose={() => setSettingsOpen(false)} onSaved={applySettings} />}
+    </div>
+  )
+}
+
+function FreshnessNotice({ error, lastUpdated, stale }: { error: string | null; lastUpdated: number | null; stale: boolean }) {
+  if (!error && !stale) return null
+  return (
+    <div className="data-notice flex items-start gap-3" role="status" aria-live="polite">
+      <WifiOff className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <div className="min-w-0">
+        <strong className="block text-sm font-semibold">{stale ? "状态数据已暂停更新" : "连接异常，正在重试"}</strong>
+        <p className="mt-1 text-xs leading-relaxed">
+          {lastUpdated === null ? error : <>
+            最近一次更新：<time dateTime={new Date(lastUpdated).toISOString()}>{new Date(lastUpdated).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })}</time>。当前显示的是上次数据。
+          </>}
+        </p>
+      </div>
     </div>
   )
 }
@@ -239,13 +265,14 @@ function BackgroundImage({ url }: { url: string }) {
 }
 
 // Group tabs sit beside the node heading, while the summary follows the selection.
-function NodeList({ nodes, group, onGroup, onOpen, config }: {
+function NodeList({ nodes, group, onGroup, onOpen, config, stale }: {
   nodes: Node[]
   /** null is every node, "" the ungrouped. */
   group: string | null
   onGroup: (group: string | null) => void
   onOpen: (id: number) => void
   config: ThemeConfig
+  stale: boolean
 }) {
   const groups = groupsOf(nodes)
   const ungrouped = nodes.filter((n) => !n.group).length
@@ -266,7 +293,7 @@ function NodeList({ nodes, group, onGroup, onOpen, config }: {
   ]
   return (
     <>
-      {config.show_summary && <Summary nodes={shown} group={current} costMode={config.cost_display_mode} />}
+      {config.show_summary && <Summary nodes={shown} group={current} costMode={config.cost_display_mode} stale={stale} />}
       <section className="node-section">
         <div className="section-heading flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-baseline gap-3">

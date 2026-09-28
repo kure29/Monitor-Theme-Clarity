@@ -77,7 +77,7 @@ export function MiniNodeCard({ node, onOpen, config }: NodeViewProps) {
         <div><span className="mini-label">CPU</span><strong className="tnum mini-value">{usage(resource(node, "cpu"))}</strong></div>
         <div><span className="mini-label">内存</span><strong className="tnum mini-value">{usage(resource(node, "mem"))}</strong></div>
       </div>
-      {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} compact />}
+      {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} compact limit={2} />}
     </button>
   )
 }

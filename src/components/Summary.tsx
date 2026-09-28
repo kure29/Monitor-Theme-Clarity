@@ -68,7 +68,7 @@ function Spark({ series }: { series: { values: number[]; className: string }[] }
 }
 
 /** `group` picks the throughput series: null for every node, else the tab's group. */
-export function Summary({ nodes, group, costMode }: { nodes: Node[]; group: string | null; costMode: CostMode }) {
+export function Summary({ nodes, group, costMode, stale }: { nodes: Node[]; group: string | null; costMode: CostMode; stale: boolean }) {
   const online = nodes.filter((n) => n.online)
   const sum = (pick: (n: Node) => number) => nodes.reduce((total, n) => total + pick(n), 0)
 
@@ -112,7 +112,7 @@ export function Summary({ nodes, group, costMode }: { nodes: Node[]; group: stri
         <Flow down={bytes(sum((n) => n.total_rx))} up={bytes(sum((n) => n.total_tx))} className="mt-0.5 text-sm" />
       </Tile>
 
-      <Tile icon={Gauge} label="实时网速">
+      <Tile icon={Gauge} label={stale ? "上次网速" : "实时网速"}>
         <Flow down={rate(now.rx)} up={rate(now.tx)} className="mt-2 text-sm font-semibold" />
         <div className="mt-auto pt-1">
           <Spark

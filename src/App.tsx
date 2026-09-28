@@ -223,7 +223,9 @@ function NodeList({ nodes, group, onGroup, onOpen, config }: {
   // A tab that has since emptied or been renamed -- 未分组 included -- falls back
   // to every node rather than to an empty page, and is forgotten, so a later
   // group of the same name does not take the page over.
-  const current = group === null || (group === "" ? ungrouped > 0 : groups.includes(group)) ? group : null
+  const current = groups.length === 0
+    ? null
+    : group === null || (group === "" ? ungrouped > 0 : groups.includes(group)) ? group : null
   useEffect(() => {
     if (current !== group) onGroup(current)
   }, [current, group, onGroup])
@@ -242,7 +244,7 @@ function NodeList({ nodes, group, onGroup, onOpen, config }: {
             <h1 className="text-xl font-semibold tracking-tight">节点</h1>
             <span className="text-sm text-muted-foreground">{shown.length} 台设备</span>
           </div>
-          <div role="group" aria-label="分组" className="group-tabs -mx-1 flex max-w-full gap-1 overflow-x-auto px-1 pb-1">
+          {groups.length > 0 && <div role="group" aria-label="分组" className="group-tabs -mx-1 flex max-w-full gap-1 overflow-x-auto px-1 pb-1">
             {tabs.map(([value, label, count]) => (
               <Button
                 // Group names are free text, so they carry a prefix no key of
@@ -258,7 +260,7 @@ function NodeList({ nodes, group, onGroup, onOpen, config }: {
                 <span className="tnum text-muted-foreground">{count}</span>
               </Button>
             ))}
-          </div>
+          </div>}
         </div>
         {nodes.length === 0 ? (
           <p className="py-16 text-center text-sm text-muted-foreground">还没有节点</p>

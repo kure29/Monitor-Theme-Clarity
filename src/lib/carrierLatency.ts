@@ -1,9 +1,8 @@
 import { api } from "./api.ts"
-import type { ThemeConfig } from "./config.ts"
 
 export type PingPoint = { task_id: number; ts: number; latency: number | null }
 export type PingHistory = { ping: PingPoint[]; probes: Record<string, string> }
-export type CarrierReading = { label: string; value: number | null | "timeout" }
+export type ProbeReading = { id: number; name: string; value: number | null | "timeout" }
 
 const cache = new Map<number, { until: number; data: PingHistory | null }>()
 const pending = new Map<number, Promise<PingHistory | null>>()
@@ -51,37 +50,38 @@ export function loadCarrierHistory(nodeId: number): Promise<PingHistory | null> 
   return request
 }
 
-export function carrierReadings(data: PingHistory | null, config: ThemeConfig, now = Date.now() / 1000): CarrierReading[] | null {
-  if (!data || !Array.isArray(data.ping) || !data.probes) return null
-  const entries = [
-    ["电信", config.carrier_telecom],
-    ["联通", config.carrier_unicom],
-    ["移动", config.carrier_mobile],
-  ] as const
+export function probeReadings(data: PingHistory | null, now = Date.now() / 1000): ProbeReading[] | null {
+  if (!data || !Array.isArray(data.ping) || !data.probes || Array.isArray(data.probes)) return null
+  // The hub includes only probes currently assigned to this node. Its ping
+  // rows start in the panel's task order; assigned probes without any samples
+  // follow those rows in id order because the public name map has no sort key.
+  const assigned = new Map<number, string>()
+  for (const [key, name] of Object.entries(data.probes)) {
+    const id = Number(key)
+    if (Number.isSafeInteger(id) && id > 0 && typeof name === "string") {
+      assigned.set(id, name.trim() || `探测 ${id}`)
+    }
+  }
+  if (assigned.size === 0) return null
   const latest = new Map<number, PingPoint>()
+  const order: number[] = []
   for (const point of data.ping) {
-    if (!Number.isFinite(point.ts) || !Number.isFinite(point.task_id)) continue
+    if (!Number.isFinite(point.ts) || !assigned.has(point.task_id)) continue
+    if (!order.includes(point.task_id)) order.push(point.task_id)
     const previous = latest.get(point.task_id)
     if (!previous || previous.ts < point.ts) latest.set(point.task_id, point)
   }
-  let matched = false
-  const readings: CarrierReading[] = entries.map(([label, term]): CarrierReading => {
-    const needle = term.trim().toLocaleLowerCase()
-    if (!needle) return { label, value: null }
-    const candidates = Object.entries(data.probes)
-      .filter(([, name]) => typeof name === "string" && name.toLocaleLowerCase().includes(needle))
-      .map(([id]) => latest.get(Number(id)))
-      .filter((point): point is PingPoint => !!point)
-    if (!candidates.length) return { label, value: null }
-    matched = true
-    const point = candidates.reduce((newest, item) => item.ts > newest.ts ? item : newest)
+  const missing = [...assigned.keys()].filter((id) => !latest.has(id)).sort((a, b) => a - b)
+  return [...order, ...missing].map((id): ProbeReading => {
+    const point = latest.get(id)
+    const name = assigned.get(id)!
+    if (!point) return { id, name, value: null }
     // A bucket timestamp is seconds since epoch. Old results must never look
     // current after an agent or probe stops reporting.
-    if (point.ts > now + 60 || now - point.ts > 300) return { label, value: null }
+    if (point.ts > now + 60 || now - point.ts > 300) return { id, name, value: null }
     if (point.latency === null || point.latency < 0 || !Number.isFinite(point.latency)) {
-      return { label, value: "timeout" }
+      return { id, name, value: "timeout" }
     }
-    return { label, value: point.latency }
+    return { id, name, value: point.latency }
   })
-  return matched ? readings : null
 }

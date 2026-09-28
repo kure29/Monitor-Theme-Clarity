@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 
-import { carrierReadings, loadCarrierHistory, type PingHistory } from "@/lib/carrierLatency"
-import type { ThemeConfig } from "@/lib/config"
+import { probeReadings, loadCarrierHistory, type PingHistory } from "@/lib/carrierLatency"
 import { cn } from "@/lib/utils"
 
-export function CarrierLatency({ nodeId, online, config, compact = false }: {
+export function CarrierLatency({ nodeId, online, compact = false }: {
   nodeId: number
   online: boolean
-  config: ThemeConfig
   compact?: boolean
 }) {
   const target = useRef<HTMLSpanElement>(null)
@@ -37,20 +35,25 @@ export function CarrierLatency({ nodeId, online, config, compact = false }: {
     return () => { active = false; window.clearInterval(timer) }
   }, [nodeId, visible])
 
-  const readings = carrierReadings(history, config)
+  const readings = probeReadings(history)
+  const shown = compact ? readings?.slice(0, 3) : readings
+  const remaining = readings ? readings.length - (shown?.length ?? 0) : 0
   return (
     <span ref={target} className={cn("carrier-latency-anchor", compact && "carrier-latency-compact")}>
-      {readings && (
-        <span className="carrier-latency" aria-label="节点到电信、联通、移动探测目标的 TCP 延迟">
-          {readings.map(({ label, value }) => (
-            <span className="carrier-latency-item" key={label}>
-              <span className="carrier-latency-label">{label}</span>
-              <span className={cn("carrier-latency-value tnum", value === "timeout" && "text-destructive")}>
-                {!online || value === null ? "—" : value === "timeout" ? "超时" : `${value.toFixed(value < 10 ? 1 : 0)} ms`}
+      {shown && (
+        <>
+          <span className="carrier-latency" aria-label="节点到后台分配的探测目标的 TCP 延迟">
+            {shown.map(({ id, name, value }) => (
+              <span className="carrier-latency-item" key={id}>
+                <span className="carrier-latency-label" title={name}>{name}</span>
+                <span className={cn("carrier-latency-value tnum", value === "timeout" && "text-destructive")}>
+                  {!online || value === null ? "—" : value === "timeout" ? "超时" : `${value.toFixed(value < 10 ? 1 : 0)} ms`}
+                </span>
               </span>
-            </span>
-          ))}
-        </span>
+            ))}
+          </span>
+          {remaining > 0 && <span className="carrier-latency-more">另有 {remaining} 项探测</span>}
+        </>
       )}
     </span>
   )

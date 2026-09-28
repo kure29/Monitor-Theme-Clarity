@@ -184,8 +184,9 @@
   margin-top: 15px; padding-top: 13px; border-top: 1px solid var(--border);
 }
 .carrier-latency-item { display: block; min-width: 0; }
-.carrier-latency-label { display: block; color: var(--muted-foreground); font-size: 11px; }
+.carrier-latency-label { display: block; overflow: hidden; color: var(--muted-foreground); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .carrier-latency-value { display: block; margin-top: 3px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.carrier-latency-more { display: block; margin-top: 8px; color: var(--muted-foreground); font-size: 10px; }
 .carrier-latency-compact .carrier-latency { gap: 5px; margin-top: 12px; padding-top: 10px; }
 .carrier-latency-compact .carrier-latency-value { font-size: 11px; }
 .compact-node-card, .mini-node-card {
@@ -256,9 +257,6 @@
 .settings-toggle { padding: 18px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .settings-toggle small { font-size: 11px; }
 .settings-toggle input { width: 18px; height: 18px; accent-color: var(--primary); }
-.settings-text { height: 38px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 9px; background: var(--background); outline: none; }
-.settings-text:focus-visible { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent); }
-.settings-text:disabled { opacity: .5; }
 .settings-secondary, .settings-primary { padding: 9px 15px; border-radius: 9px; font-size: 13px; font-weight: 600; }
 .settings-secondary { background: var(--muted); }
 .settings-primary { background: var(--primary); color: var(--primary-foreground); }

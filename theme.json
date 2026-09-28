@@ -2,7 +2,7 @@
   "name": "Clarity",
   "short": "clarity",
   "description": "简洁、清晰的公开状态页，支持多种节点视图与站点级设置",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "author": "kure29",
   "url": "https://github.com/kure29/Monitor-Theme-Clarity",
   "config": [
@@ -25,15 +25,12 @@
       "label": "显示顶部概览",
       "default": true
     },
-    { "type": "title", "label": "三网延迟" },
+    { "type": "title", "label": "延迟监控" },
     {
       "key": "show_carrier_latency",
       "type": "boolean",
-      "label": "在节点视图显示三网延迟",
+      "label": "在节点视图显示延迟",
       "default": true
-    },
-    { "key": "carrier_telecom", "type": "string", "label": "电信探测任务名称包含", "default": "电信" },
-    { "key": "carrier_unicom", "type": "string", "label": "联通探测任务名称包含", "default": "联通" },
-    { "key": "carrier_mobile", "type": "string", "label": "移动探测任务名称包含", "default": "移动" }
+    }
   ]
 }

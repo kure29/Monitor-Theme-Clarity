@@ -57,7 +57,7 @@ export function CompactNodeCard({ node, onOpen, config }: NodeViewProps) {
         <span className="tnum inline-flex items-center gap-1"><ArrowUp className="size-3" />{node.metrics ? rate(node.metrics.net_tx) : "—"}</span>
         <ChevronRight className="size-4" aria-hidden />
       </div>
-      {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} config={config} />}
+      {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} />}
     </button>
   )
 }
@@ -77,7 +77,7 @@ export function MiniNodeCard({ node, onOpen, config }: NodeViewProps) {
         <div><span className="mini-label">CPU</span><strong className="tnum mini-value">{usage(resource(node, "cpu"))}</strong></div>
         <div><span className="mini-label">内存</span><strong className="tnum mini-value">{usage(resource(node, "mem"))}</strong></div>
       </div>
-      {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} config={config} compact />}
+      {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} compact />}
     </button>
   )
 }
@@ -87,7 +87,7 @@ export function NodeRows({ nodes, onOpen, config }: { nodes: Node[]; onOpen: (id
     <div className={`node-table ${config.show_carrier_latency ? "node-table-with-carrier" : ""}`} aria-label="节点列表">
       <div className="node-table-head">
         <span>节点</span><span>状态</span><span>CPU</span>
-        <span>内存</span><span>硬盘</span><span>网络</span>{config.show_carrier_latency && <span>三网延迟</span>}
+        <span>内存</span><span>硬盘</span><span>网络</span>{config.show_carrier_latency && <span>网络延迟</span>}
       </div>
       {nodes.map((node) => (
         <button key={node.id} className="list-node-row" onClick={() => onOpen(node.id)} aria-label={`查看 ${node.name} 详情`}>
@@ -100,7 +100,7 @@ export function NodeRows({ nodes, onOpen, config }: { nodes: Node[]; onOpen: (id
           <span className="tnum list-node-value"><small>内存</small>{usage(resource(node, "mem"))}</span>
           <span className="tnum list-node-value"><small>硬盘</small>{usage(resource(node, "disk"))}</span>
           <span className="tnum list-node-value"><small>网络</small>{node.metrics ? rate(node.metrics.net_rx) : "—"}</span>
-          {config.show_carrier_latency && <span className="list-node-carrier"><CarrierLatency nodeId={node.id} online={node.online} config={config} compact /></span>}
+          {config.show_carrier_latency && <span className="list-node-carrier"><CarrierLatency nodeId={node.id} online={node.online} compact /></span>}
         </button>
       ))}
       {nodes.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">这个分组还没有节点</p>}

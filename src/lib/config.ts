@@ -6,9 +6,6 @@ export type ThemeConfig = {
   card_mode: ViewMode
   show_summary: boolean
   show_carrier_latency: boolean
-  carrier_telecom: string
-  carrier_unicom: string
-  carrier_mobile: string
 }
 
 type Field = { key: string; type: string; default: unknown; options?: { value: string }[] }
@@ -57,6 +54,10 @@ export async function saveConfig(values: ThemeConfig): Promise<void> {
   const stored: unknown = await read.json()
   if (!isRecord(stored)) throw new Error("主题设置格式不正确")
   const next = { ...stored }
+  // Retired in v0.2.5: task names now come from the hub's current assignments.
+  delete next.carrier_telecom
+  delete next.carrier_unicom
+  delete next.carrier_mobile
   for (const field of fields) {
     const value = values[field.key as keyof ThemeConfig]
     if (!fits(field, value)) throw new Error(`${field.key} 的值无效`)

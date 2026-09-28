@@ -245,7 +245,7 @@ export function NodeCard({ node, onOpen, config }: { node: Node; onOpen: () => v
               {bytes(node.total_tx)}
             </span>
           </div>
-          {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} config={config} />}
+          {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} />}
         </>
       ) : (
         /* Never connected: nothing to plot, so the card stays short rather than

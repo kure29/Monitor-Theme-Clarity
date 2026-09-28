@@ -73,24 +73,12 @@ export function ThemeSettings({ config, onClose, onSaved }: {
         </label>
 
         <fieldset className="mt-6 border-t border-border pt-5">
-          <legend className="text-sm font-semibold">三网延迟</legend>
+          <legend className="text-sm font-semibold">延迟监控</legend>
           <label className="mt-3 flex items-center justify-between gap-4 text-sm">
             <span>在节点视图显示</span>
             <input type="checkbox" className="size-[18px] accent-primary" checked={draft.show_carrier_latency} onChange={(event) => setDraft((current) => ({ ...current, show_carrier_latency: event.target.checked }))} />
           </label>
-          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">在 monitor 后台创建并分配三条 TCP 延迟探测任务。主题按任务名称匹配，显示节点到探测目标的最近结果。</p>
-          {([["carrier_telecom", "电信"], ["carrier_unicom", "联通"], ["carrier_mobile", "移动"]] as const).map(([key, label]) => (
-            <label key={key} className="mt-3 block text-xs text-muted-foreground">
-              {label}任务名称包含
-              <input
-                className="settings-text mt-1 block w-full text-sm text-foreground"
-                value={draft[key]}
-                onChange={(event) => setDraft((current) => ({ ...current, [key]: event.target.value }))}
-                maxLength={80}
-                disabled={!draft.show_carrier_latency}
-              />
-            </label>
-          ))}
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">自动显示 monitor 后台分配给各节点的 TCP 探测任务与最近结果，无需在主题里配置任务名称。</p>
         </fieldset>
 
         {error && <p className="mt-5 text-sm text-destructive" role="alert">{error}</p>}

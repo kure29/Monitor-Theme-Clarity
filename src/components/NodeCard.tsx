@@ -8,7 +8,9 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Meter } from "@/components/Meter"
+import { CarrierLatency } from "@/components/CarrierLatency"
 import type { Node } from "@/lib/api"
+import type { ThemeConfig } from "@/lib/config"
 import { bytes, daysUntil, FOREVER, osName, pair, percent, rate, uptime } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -157,7 +159,7 @@ function Expiry({ node }: { node: Node }) {
   )
 }
 
-export function NodeCard({ node, onOpen }: { node: Node; onOpen: () => void }) {
+export function NodeCard({ node, onOpen, config }: { node: Node; onOpen: () => void; config: ThemeConfig }) {
   const m = node.metrics
 
   return (
@@ -243,6 +245,7 @@ export function NodeCard({ node, onOpen }: { node: Node; onOpen: () => void }) {
               {bytes(node.total_tx)}
             </span>
           </div>
+          {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} config={config} />}
         </>
       ) : (
         /* Never connected: nothing to plot, so the card stays short rather than

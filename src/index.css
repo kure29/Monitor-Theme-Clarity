@@ -178,6 +178,16 @@
   .node-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px #1c293a18; }
 }
 .node-card:active { transform: scale(.99); }
+.carrier-latency-anchor { display: block; min-height: 1px; }
+.carrier-latency {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+  margin-top: 15px; padding-top: 13px; border-top: 1px solid var(--border);
+}
+.carrier-latency-item { display: block; min-width: 0; }
+.carrier-latency-label { display: block; color: var(--muted-foreground); font-size: 11px; }
+.carrier-latency-value { display: block; margin-top: 3px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.carrier-latency-compact .carrier-latency { gap: 5px; margin-top: 12px; padding-top: 10px; }
+.carrier-latency-compact .carrier-latency-value { font-size: 11px; }
 .compact-node-card, .mini-node-card {
   display: block; width: 100%; padding: 20px;
   transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms ease;
@@ -202,6 +212,20 @@
   display: grid; grid-template-columns: minmax(190px, 2fr) minmax(135px, 1fr) repeat(3, minmax(75px, .75fr)) minmax(95px, 1fr);
   align-items: center; gap: 16px;
 }
+.node-table-with-carrier .node-table-head, .node-table-with-carrier .list-node-row {
+  grid-template-columns: minmax(160px, 2fr) minmax(115px, 1fr) repeat(3, minmax(62px, .7fr)) minmax(80px, 1fr) minmax(180px, 1.5fr);
+  gap: 12px;
+}
+.node-table-with-carrier:not(:has(.carrier-latency)) .node-table-head,
+.node-table-with-carrier:not(:has(.carrier-latency)) .list-node-row {
+  grid-template-columns: minmax(190px, 2fr) minmax(135px, 1fr) repeat(3, minmax(75px, .75fr)) minmax(95px, 1fr);
+  gap: 16px;
+}
+.node-table-with-carrier:not(:has(.carrier-latency)) .node-table-head span:last-child,
+.node-table-with-carrier:not(:has(.carrier-latency)) .list-node-carrier { display: none; }
+.list-node-carrier .carrier-latency { margin: 0; padding: 0; border: 0; }
+.list-node-carrier .carrier-latency-label { font-size: 10px; }
+.list-node-carrier .carrier-latency-value { font-size: 11px; }
 .node-table-head {
   padding: 15px 20px; color: var(--muted-foreground); background: var(--accent);
   font-size: 11px; font-weight: 600;
@@ -232,6 +256,9 @@
 .settings-toggle { padding: 18px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .settings-toggle small { font-size: 11px; }
 .settings-toggle input { width: 18px; height: 18px; accent-color: var(--primary); }
+.settings-text { height: 38px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 9px; background: var(--background); outline: none; }
+.settings-text:focus-visible { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent); }
+.settings-text:disabled { opacity: .5; }
 .settings-secondary, .settings-primary { padding: 9px 15px; border-radius: 9px; font-size: 13px; font-weight: 600; }
 .settings-secondary { background: var(--muted); }
 .settings-primary { background: var(--primary); color: var(--primary-foreground); }
@@ -260,16 +287,21 @@
   .settings-options { grid-template-columns: 1fr; }
   .theme-settings-dialog { padding: 22px; }
 }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .node-table { background: transparent; box-shadow: none; }
   .node-table-head { display: none; }
+  .node-table-with-carrier .node-table-head { display: none; }
   .list-node-row {
     grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
     margin-bottom: 10px; padding: 17px; border: 0; border-radius: 14px;
     background: var(--card); box-shadow: 0 4px 14px #1c293a0b;
   }
+  .node-table-with-carrier .list-node-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .node-table-with-carrier:not(:has(.carrier-latency)) .list-node-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .list-node-identity { grid-column: 1 / -1; }
   .list-node-status { grid-column: 1 / -1; }
+  .list-node-carrier { grid-column: 1 / -1; }
+  .list-node-carrier .carrier-latency { padding-top: 10px; border-top: 1px solid var(--border); }
   .list-node-value small { display: block; margin-bottom: 3px; color: var(--muted-foreground); font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {

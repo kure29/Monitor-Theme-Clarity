@@ -8,7 +8,7 @@ import { ThemeSettings } from "@/components/ThemeSettings"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api, groupsOf, useNodes, type Node } from "@/lib/api"
-import { DEFAULT_CONFIG, loadConfig, type ThemeConfig, type ViewMode } from "@/lib/config"
+import { DEFAULT_CONFIG, loadConfig, type ThemeConfig } from "@/lib/config"
 
 type Me = { authed: boolean; github: boolean; site_name: string; public_page: boolean }
 
@@ -201,7 +201,7 @@ export default function App() {
             ))}
           </div>
         ) : (
-          <NodeList nodes={sorted} group={group} onGroup={setGroup} onOpen={go} mode={siteConfig.card_mode} showSummary={siteConfig.show_summary} />
+          <NodeList nodes={sorted} group={group} onGroup={setGroup} onOpen={go} config={siteConfig} />
         )}
       </main>
       {settingsOpen && me.authed && <ThemeSettings config={siteConfig} onClose={() => setSettingsOpen(false)} onSaved={applySettings} />}
@@ -210,14 +210,13 @@ export default function App() {
 }
 
 // Group tabs sit beside the node heading, while the summary follows the selection.
-function NodeList({ nodes, group, onGroup, onOpen, mode, showSummary }: {
+function NodeList({ nodes, group, onGroup, onOpen, config }: {
   nodes: Node[]
   /** null is every node, "" the ungrouped. */
   group: string | null
   onGroup: (group: string | null) => void
   onOpen: (id: number) => void
-  mode: ViewMode
-  showSummary: boolean
+  config: ThemeConfig
 }) {
   const groups = groupsOf(nodes)
   const ungrouped = nodes.filter((n) => !n.group).length
@@ -236,7 +235,7 @@ function NodeList({ nodes, group, onGroup, onOpen, mode, showSummary }: {
   ]
   return (
     <>
-      {showSummary && <Summary nodes={shown} group={current} />}
+      {config.show_summary && <Summary nodes={shown} group={current} />}
       <section className="node-section">
         <div className="section-heading flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-baseline gap-3">
@@ -263,16 +262,16 @@ function NodeList({ nodes, group, onGroup, onOpen, mode, showSummary }: {
         </div>
         {nodes.length === 0 ? (
           <p className="py-16 text-center text-sm text-muted-foreground">还没有节点</p>
-        ) : mode === "list" ? (
-          <NodeRows nodes={shown} onOpen={onOpen} />
+        ) : config.card_mode === "list" ? (
+          <NodeRows nodes={shown} onOpen={onOpen} config={config} />
         ) : (
-          <div className={`node-grid grid items-start gap-4 ${mode === "mini" ? "grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 xl:grid-cols-3"}`}>
+          <div className={`node-grid grid items-start gap-4 ${config.card_mode === "mini" ? "grid-cols-2 lg:grid-cols-4" : "md:grid-cols-2 xl:grid-cols-3"}`}>
             {shown.map((n) => (
-              mode === "large"
-                ? <NodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
-                : mode === "compact"
-                  ? <CompactNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
-                  : <MiniNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} />
+              config.card_mode === "large"
+                ? <NodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} config={config} />
+                : config.card_mode === "compact"
+                  ? <CompactNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} config={config} />
+                  : <MiniNodeCard key={n.id} node={n} onOpen={() => onOpen(n.id)} config={config} />
             ))}
           </div>
         )}

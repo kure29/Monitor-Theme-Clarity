@@ -2,7 +2,14 @@ import manifest from "../../theme.json"
 
 export const VIEW_MODES = ["large", "compact", "mini", "list"] as const
 export type ViewMode = (typeof VIEW_MODES)[number]
-export type ThemeConfig = { card_mode: ViewMode; show_summary: boolean }
+export type ThemeConfig = {
+  card_mode: ViewMode
+  show_summary: boolean
+  show_carrier_latency: boolean
+  carrier_telecom: string
+  carrier_unicom: string
+  carrier_mobile: string
+}
 
 type Field = { key: string; type: string; default: unknown; options?: { value: string }[] }
 const fields = (manifest.config as Field[]).filter((field) => field.type !== "title")

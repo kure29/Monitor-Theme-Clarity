@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react"
-import { ArrowLeft, Moon, Settings2, Sun } from "lucide-react"
+import { ArrowLeft, LayoutDashboard, Moon, Settings2, Sun } from "lucide-react"
 
 import { NodeCard } from "@/components/NodeCard"
 import { CompactNodeCard, MiniNodeCard, NodeRows } from "@/components/NodeViews"
@@ -183,6 +183,11 @@ export default function App() {
               <Settings2 /><span className="hidden sm:inline">主题设置</span>
             </Button>
           )}
+          {me.authed && (
+            <Button asChild variant="ghost" size="sm" className="header-action">
+              <a href="/admin/"><LayoutDashboard /><span className="hidden sm:inline">进入后台</span><span className="sm:hidden">后台</span></a>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" onClick={toggleTheme} title="切换主题" aria-label="切换主题" className="header-action">
             {dark ? <Sun /> : <Moon />}
           </Button>
@@ -261,7 +266,7 @@ function NodeList({ nodes, group, onGroup, onOpen, config }: {
   ]
   return (
     <>
-      {config.show_summary && <Summary nodes={shown} group={current} />}
+      {config.show_summary && <Summary nodes={shown} group={current} costMode={config.cost_display_mode} />}
       <section className="node-section">
         <div className="section-heading flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-baseline gap-3">

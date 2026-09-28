@@ -2,7 +2,7 @@
   "name": "Clarity",
   "short": "clarity",
   "description": "简洁、清晰的公开状态页，支持多种节点视图与站点级设置",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "author": "kure29",
   "url": "https://github.com/kure29/Monitor-Theme-Clarity",
   "config": [
@@ -24,6 +24,18 @@
       "type": "boolean",
       "label": "显示顶部概览",
       "default": true
+    },
+    { "type": "title", "label": "服务器费用" },
+    {
+      "key": "cost_display_mode",
+      "type": "select",
+      "label": "费用统计方式",
+      "default": "monthly",
+      "options": [
+        { "value": "daily", "label": "日均" },
+        { "value": "monthly", "label": "月均" },
+        { "value": "total", "label": "总费用（年化）" }
+      ]
     },
     { "type": "title", "label": "页面背景" },
     {

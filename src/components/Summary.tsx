@@ -3,7 +3,8 @@ import { ArrowDown, ArrowDownUp, ArrowUp, Gauge, Server, Wallet } from "lucide-r
 
 import { Card } from "@/components/ui/card"
 import { speedHistory, type Node } from "@/lib/api"
-import { costByCurrency, costMoney, getExchangeRates, monthlyTotalCny, type ExchangeRates } from "@/lib/cost"
+import type { CostMode } from "@/lib/config"
+import { costByCurrency, costForMode, costMoney, getExchangeRates, monthlyTotalCny, type ExchangeRates } from "@/lib/cost"
 import { bytes, rate } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -67,7 +68,7 @@ function Spark({ series }: { series: { values: number[]; className: string }[] }
 }
 
 /** `group` picks the throughput series: null for every node, else the tab's group. */
-export function Summary({ nodes, group }: { nodes: Node[]; group: string | null }) {
+export function Summary({ nodes, group, costMode }: { nodes: Node[]; group: string | null; costMode: CostMode }) {
   const online = nodes.filter((n) => n.online)
   const sum = (pick: (n: Node) => number) => nodes.reduce((total, n) => total + pick(n), 0)
 
@@ -88,6 +89,7 @@ export function Summary({ nodes, group }: { nodes: Node[]; group: string | null 
     return () => controller.abort()
   }, [needsRates])
   const monthlyCost = monthlyTotalCny(costs, rateData?.rates ?? { CNY: 1 })
+  const costLabel = costMode === "daily" ? "日均费用" : costMode === "total" ? "年化总费用" : "月均费用"
 
   return (
     <div className="summary-grid grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -130,10 +132,10 @@ export function Summary({ nodes, group }: { nodes: Node[]; group: string | null 
             <div className="tnum mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">
               {monthlyCost === null
                 ? <span className="text-sm text-muted-foreground">{rateError ? "汇率暂不可用" : rateData ? "币种汇率缺失" : "汇率加载中…"}</span>
-                : costMoney(monthlyCost, "CNY")}
+                : costMoney(costForMode(monthlyCost, costMode), "CNY")}
             </div>
             <div className="mt-auto pt-2 text-xs text-muted-foreground">
-              月均总价{needsRates ? " · 已折算人民币" : ""}
+              {costLabel}{needsRates ? " · 已折算人民币" : ""}
             </div>
           </>
         )}

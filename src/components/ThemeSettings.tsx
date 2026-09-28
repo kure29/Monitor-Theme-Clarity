@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from "react"
 import { Check, X } from "lucide-react"
 
-import { isBackgroundImageUrl, saveConfig, type ThemeConfig, type ViewMode } from "@/lib/config"
+import { isBackgroundImageUrl, saveConfig, type CostMode, type ThemeConfig, type ViewMode } from "@/lib/config"
 
 const OPTIONS: { mode: ViewMode; label: string; help: string }[] = [
   { mode: "large", label: "大卡片", help: "显示完整资源与流量" },
   { mode: "compact", label: "小卡片", help: "缩短卡片，保留资源概况" },
   { mode: "mini", label: "迷你卡片", help: "快速扫视节点与关键指标" },
   { mode: "list", label: "列表", help: "在一行内比较多个节点" },
+]
+const COST_OPTIONS: { mode: CostMode; label: string }[] = [
+  { mode: "daily", label: "日均" },
+  { mode: "monthly", label: "月均" },
+  { mode: "total", label: "总费用" },
 ]
 
 export function ThemeSettings({ config, onClose, onSaved }: {
@@ -73,6 +78,26 @@ export function ThemeSettings({ config, onClose, onSaved }: {
           <span><strong className="block text-sm">显示顶部概览</strong><small className="mt-1 block text-muted-foreground">节点、流量、网速与服务器费用</small></span>
           <input type="checkbox" checked={draft.show_summary} onChange={(event) => setDraft((current) => ({ ...current, show_summary: event.target.checked }))} />
         </label>
+
+        <fieldset className="mt-6 border-t border-border pt-5">
+          <legend className="text-sm font-semibold">服务器费用</legend>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {COST_OPTIONS.map(({ mode, label }) => (
+              <label key={mode} className="settings-cost-option flex cursor-pointer items-center justify-center text-center text-sm font-medium">
+                <input
+                  className="sr-only"
+                  type="radio"
+                  name="cost-display-mode"
+                  value={mode}
+                  checked={draft.cost_display_mode === mode}
+                  onChange={() => setDraft((current) => ({ ...current, cost_display_mode: mode }))}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">根据后台填写的价格与付款周期折算。总费用按一年计算，一次性购买不计入。</p>
+        </fieldset>
 
         <fieldset className="mt-6 border-t border-border pt-5">
           <legend className="text-sm font-semibold">页面背景</legend>

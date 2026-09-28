@@ -2,9 +2,12 @@ import manifest from "../../theme.json"
 
 export const VIEW_MODES = ["large", "compact", "mini", "list"] as const
 export type ViewMode = (typeof VIEW_MODES)[number]
+export const COST_MODES = ["daily", "monthly", "total"] as const
+export type CostMode = (typeof COST_MODES)[number]
 export type ThemeConfig = {
   card_mode: ViewMode
   show_summary: boolean
+  cost_display_mode: CostMode
   show_carrier_latency: boolean
   background_image_url: string
   global_transparency: number

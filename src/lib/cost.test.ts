@@ -1,4 +1,4 @@
-import { billingMonths, costByCurrency, costMoney, monthlyTotalCny, parseUsdRates } from "./cost.ts"
+import { billingMonths, costByCurrency, costForMode, costMoney, monthlyTotalCny, parseUsdRates } from "./cost.ts"
 
 let failed = 0
 function eq(got: unknown, want: unknown, label: string) {
@@ -35,5 +35,8 @@ eq(monthlyTotalCny([
 ], { USD: 1, CNY: 7.2, EUR: 0.9 }), 82, "mixed currencies become one CNY monthly total")
 eq(monthlyTotalCny([{ currency: "EUR", monthly: 9 }], { USD: 1, CNY: 7.2 }),
   null, "missing rate never produces a partial total")
+eq(costForMode(365, "daily"), 12, "daily average uses an annual basis")
+eq(costForMode(365, "monthly"), 365, "monthly average retains current behavior")
+eq(costForMode(365, "total"), 4380, "total is annualized across billing cycles")
 
 if (failed) process.exitCode = 1

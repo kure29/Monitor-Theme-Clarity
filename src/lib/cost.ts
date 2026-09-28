@@ -1,4 +1,5 @@
 import type { Node } from "./api"
+import type { CostMode } from "./config"
 
 type PricedNode = Pick<Node, "price" | "currency" | "billing_cycle">
 
@@ -117,6 +118,13 @@ export function monthlyTotalCny(costs: CurrencyCost[], rates: Record<string, num
     }
   }
   return total
+}
+
+/** A year is the common basis for plans with different billing cycles. */
+export function costForMode(monthly: number, mode: CostMode): number {
+  if (mode === "daily") return monthly * 12 / 365
+  if (mode === "total") return monthly * 12
+  return monthly
 }
 
 const SYMBOLS: Record<string, string> = { CNY: "¥", USD: "$", EUR: "€", GBP: "£", JPY: "¥" }

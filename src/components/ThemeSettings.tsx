@@ -88,6 +88,21 @@ export function ThemeSettings({ config, onClose, onSaved }: {
             onChange={(event) => setDraft((current) => ({ ...current, background_image_url: event.target.value }))}
           />
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">填写直接返回图片的 API 地址，一张图会自动适配手机与电脑。留空则使用默认背景。图片地址会对访客公开。</p>
+          <div className="mt-5 flex items-center justify-between gap-3 text-sm">
+            <label htmlFor="global-transparency" className="font-medium">全局透明度</label>
+            <output htmlFor="global-transparency" className="tnum text-muted-foreground">{draft.global_transparency}%</output>
+          </div>
+          <input
+            id="global-transparency"
+            className="settings-range mt-3 w-full accent-primary"
+            type="range"
+            min="0"
+            max="70"
+            step="5"
+            value={draft.global_transparency}
+            onChange={(event) => setDraft((current) => ({ ...current, global_transparency: Number(event.target.value) }))}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">调整卡片、顶栏和详情面板；数值越大，背景越明显。</p>
         </fieldset>
 
         <fieldset className="mt-6 border-t border-border pt-5">

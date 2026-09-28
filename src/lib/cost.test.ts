@@ -1,4 +1,4 @@
-import { billingMonths, costByCurrency, costMoney } from "./cost.ts"
+import { billingMonths, costByCurrency, costMoney, monthlyTotalCny, parseUsdRates } from "./cost.ts"
 
 let failed = 0
 function eq(got: unknown, want: unknown, label: string) {
@@ -23,9 +23,17 @@ eq(costByCurrency([
   { price: 90, currency: "CNY", billing_cycle: "once" },
   { price: 0, currency: "USD", billing_cycle: "monthly" },
 ]), [
-  { currency: "CNY", monthly: 10, annual: 120, count: 1 },
-  { currency: "USD", monthly: 24, annual: 288, count: 2 },
+  { currency: "CNY", monthly: 10 },
+  { currency: "USD", monthly: 24 },
 ], "monthly amortization and currency separation")
 eq(costMoney(24.5, "USD"), "$24.5", "formatted cost")
+eq(parseUsdRates([{ base: "USD", quote: "CNY", rate: 7.2 }, { base: "USD", quote: "EUR", rate: 0.9 }]),
+  { USD: 1, CNY: 7.2, EUR: 0.9 }, "Frankfurter v2 rates")
+eq(monthlyTotalCny([
+  { currency: "CNY", monthly: 10 },
+  { currency: "EUR", monthly: 9 },
+], { USD: 1, CNY: 7.2, EUR: 0.9 }), 82, "mixed currencies become one CNY monthly total")
+eq(monthlyTotalCny([{ currency: "EUR", monthly: 9 }], { USD: 1, CNY: 7.2 }),
+  null, "missing rate never produces a partial total")
 
 if (failed) process.exitCode = 1

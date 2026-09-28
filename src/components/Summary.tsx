@@ -1,8 +1,9 @@
+import { useEffect, useState } from "react"
 import { ArrowDown, ArrowDownUp, ArrowUp, Gauge, Server, Wallet } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { speedHistory, type Node } from "@/lib/api"
-import { costByCurrency, costMoney } from "@/lib/cost"
+import { costByCurrency, costMoney, getExchangeRates, monthlyTotalCny, type ExchangeRates } from "@/lib/cost"
 import { bytes, rate } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -75,6 +76,18 @@ export function Summary({ nodes, group }: { nodes: Node[]; group: string | null 
   const history = speedHistory.get(group) ?? []
   const now = history.at(-1) ?? { rx: 0, tx: 0 }
   const costs = costByCurrency(nodes)
+  const needsRates = costs.some(({ currency }) => currency !== "CNY")
+  const [rateData, setRateData] = useState<ExchangeRates | null>(null)
+  const [rateError, setRateError] = useState(false)
+  useEffect(() => {
+    if (!needsRates) return
+    const controller = new AbortController()
+    void getExchangeRates(controller.signal)
+      .then((rates) => { setRateData(rates); setRateError(false) })
+      .catch(() => { if (!controller.signal.aborted) setRateError(true) })
+    return () => controller.abort()
+  }, [needsRates])
+  const monthlyCost = monthlyTotalCny(costs, rateData?.rates ?? { CNY: 1 })
 
   return (
     <div className="summary-grid grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -114,21 +127,13 @@ export function Summary({ nodes, group }: { nodes: Node[]; group: string | null 
           <div className="mt-auto text-sm text-muted-foreground">暂无定价</div>
         ) : (
           <>
-            <div className="cost-rows mt-2 space-y-1.5">
-              {costs.map(({ currency, monthly }) => (
-                <div key={currency} className="flex min-w-0 items-baseline justify-between gap-1.5">
-                  <span className="shrink-0 text-[11px] text-muted-foreground">月均</span>
-                  <strong className="tnum min-w-0 text-right text-sm font-semibold" title={`${currency} 月均 ${costMoney(monthly, currency, true)}`}>
-                    {costMoney(monthly, currency, costs.length > 1)}
-                  </strong>
-                </div>
-              ))}
+            <div className="tnum mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">
+              {monthlyCost === null
+                ? <span className="text-sm text-muted-foreground">{rateError ? "汇率暂不可用" : rateData ? "币种汇率缺失" : "汇率加载中…"}</span>
+                : costMoney(monthlyCost, "CNY")}
             </div>
-            <div className="cost-annual mt-auto flex flex-wrap gap-x-1.5 pt-2 text-[11px] text-muted-foreground">
-              <span>年化</span>
-              {costs.map(({ currency, annual }) => (
-                <span className="tnum" key={currency}>{costMoney(annual, currency, costs.length > 1)}</span>
-              ))}
+            <div className="mt-auto pt-2 text-xs text-muted-foreground">
+              月均总价{needsRates ? " · 已折算人民币" : ""}
             </div>
           </>
         )}

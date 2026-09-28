@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState, useSyncExternalStore } from "react"
+import { lazy, Suspense, useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react"
 import { ArrowLeft, Moon, Settings2, Sun } from "lucide-react"
 
 import { NodeCard } from "@/components/NodeCard"
@@ -91,6 +91,14 @@ export default function App() {
   const [group, setGroup] = useState<string | null>(null)
   const [siteConfig, setSiteConfig] = useState<ThemeConfig>(DEFAULT_CONFIG)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [headerScrolled, setHeaderScrolled] = useState(false)
+
+  useEffect(() => {
+    const sync = () => setHeaderScrolled(scrollY > 8)
+    sync()
+    addEventListener("scroll", sync, { passive: true })
+    return () => removeEventListener("scroll", sync)
+  }, [])
 
   function applySettings(next: ThemeConfig) {
     setSiteConfig(next)
@@ -152,9 +160,15 @@ export default function App() {
   if (!me.public_page && !me.authed) return null
 
   return (
-    <div className={`app-shell min-h-svh ${siteConfig.background_image_url ? "has-background-image" : ""}`}>
+    <div
+      className={`app-shell min-h-svh ${siteConfig.background_image_url ? "has-background-image" : ""}`}
+      style={{
+        "--surface-opacity": `${100 - siteConfig.global_transparency}%`,
+        "--header-opacity": `${100 - siteConfig.global_transparency}%`,
+      } as CSSProperties}
+    >
       {siteConfig.background_image_url && <BackgroundImage key={siteConfig.background_image_url} url={siteConfig.background_image_url} />}
-      <header className="app-header sticky top-0 z-10">
+      <header className={`app-header sticky top-0 z-10 ${headerScrolled ? "is-scrolled" : ""}`}>
         <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-5 py-4 sm:px-8">
           {/* The site name is the way back to the list, so a node page needs
               no back button of its own. */}

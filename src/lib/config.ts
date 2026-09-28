@@ -7,9 +7,10 @@ export type ThemeConfig = {
   show_summary: boolean
   show_carrier_latency: boolean
   background_image_url: string
+  global_transparency: number
 }
 
-type Field = { key: string; type: string; default: unknown; options?: { value: string }[] }
+type Field = { key: string; type: string; default: unknown; options?: { value: string }[]; min?: number; max?: number }
 const fields = (manifest.config as Field[]).filter((field) => field.type !== "title")
 const url = `/api/themes/${manifest.short}/config`
 
@@ -19,6 +20,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function fits(field: Field, value: unknown): boolean {
   if (field.type === "boolean") return typeof value === "boolean"
+  if (field.type === "number") return typeof value === "number" && Number.isFinite(value)
+    && value >= (field.min ?? -Infinity) && value <= (field.max ?? Infinity)
   if (field.type === "select") return field.options?.some((option) => option.value === value) ?? false
   if (field.key === "background_image_url") return typeof value === "string" && isBackgroundImageUrl(value)
   return typeof value === "string"

@@ -2,7 +2,7 @@
   "name": "Clarity",
   "short": "clarity",
   "description": "简洁、清晰的公开状态页，支持多种节点视图与站点级设置",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "author": "kure29",
   "url": "https://github.com/kure29/Monitor-Theme-Clarity",
   "config": [
@@ -30,7 +30,17 @@
       "key": "background_image_url",
       "type": "string",
       "label": "背景图片 API 地址",
-      "default": ""
+      "default": "",
+      "help": "直接返回图片的 API 地址；同一地址自适应手机与桌面"
+    },
+    {
+      "key": "global_transparency",
+      "type": "number",
+      "label": "全局透明度",
+      "default": 20,
+      "min": 0,
+      "max": 70,
+      "help": "调整卡片、顶栏与详情面板的透明度；数值越大，背景越明显"
     },
     { "type": "title", "label": "延迟监控" },
     {

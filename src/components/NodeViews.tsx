@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ChevronRight } from "lucide-react"
+import { ArrowDown, ArrowUp } from "lucide-react"
 
 import { Country, Status } from "@/components/NodeCard"
 import { CarrierLatency } from "@/components/CarrierLatency"
@@ -55,7 +55,6 @@ export function CompactNodeCard({ node, onOpen, config }: NodeViewProps) {
       <div className="mt-5 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
         <span className="tnum inline-flex items-center gap-1"><ArrowDown className="size-3" />{node.metrics ? rate(node.metrics.net_rx) : "—"}</span>
         <span className="tnum inline-flex items-center gap-1"><ArrowUp className="size-3" />{node.metrics ? rate(node.metrics.net_tx) : "—"}</span>
-        <ChevronRight className="size-4" aria-hidden />
       </div>
       {config.show_carrier_latency && <CarrierLatency nodeId={node.id} online={node.online} />}
     </button>

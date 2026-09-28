@@ -193,8 +193,8 @@ export default function App() {
             </Button>
           )}
           {me.authed && (
-            <Button asChild variant="ghost" size="sm" className="header-action">
-              <a href="/admin/"><LayoutDashboard /><span className="hidden sm:inline">进入后台</span><span className="sm:hidden">后台</span></a>
+            <Button asChild variant="ghost" size="icon" className="header-action">
+              <a href="/admin/" aria-label="进入后台" title="进入后台"><LayoutDashboard /></a>
             </Button>
           )}
           <Button variant="ghost" size="icon" onClick={toggleTheme} title="切换主题" aria-label="切换主题" className="header-action">

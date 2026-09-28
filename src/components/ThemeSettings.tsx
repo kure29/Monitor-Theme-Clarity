@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Check, X } from "lucide-react"
 
-import { saveConfig, type ThemeConfig, type ViewMode } from "@/lib/config"
+import { isBackgroundImageUrl, saveConfig, type ThemeConfig, type ViewMode } from "@/lib/config"
 
 const OPTIONS: { mode: ViewMode; label: string; help: string }[] = [
   { mode: "large", label: "大卡片", help: "显示完整资源与流量" },
@@ -29,8 +29,10 @@ export function ThemeSettings({ config, onClose, onSaved }: {
     setSaving(true)
     setError("")
     try {
-      await saveConfig(draft)
-      onSaved(draft)
+      const next = { ...draft, background_image_url: draft.background_image_url.trim() }
+      if (!isBackgroundImageUrl(next.background_image_url)) throw new Error("请输入有效的 http(s) 图片地址或站内路径")
+      await saveConfig(next)
+      onSaved(next)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "保存主题设置失败")
     } finally {
@@ -68,9 +70,25 @@ export function ThemeSettings({ config, onClose, onSaved }: {
         </fieldset>
 
         <label className="settings-toggle mt-6 flex items-center justify-between gap-4">
-          <span><strong className="block text-sm">显示顶部概览</strong><small className="mt-1 block text-muted-foreground">节点数量、流量与实时网速</small></span>
+          <span><strong className="block text-sm">显示顶部概览</strong><small className="mt-1 block text-muted-foreground">节点、流量、网速与服务器费用</small></span>
           <input type="checkbox" checked={draft.show_summary} onChange={(event) => setDraft((current) => ({ ...current, show_summary: event.target.checked }))} />
         </label>
+
+        <fieldset className="mt-6 border-t border-border pt-5">
+          <legend className="text-sm font-semibold">页面背景</legend>
+          <label htmlFor="background-image-url" className="mt-3 block text-xs text-muted-foreground">背景图片 API 地址</label>
+          <input
+            id="background-image-url"
+            type="text"
+            inputMode="url"
+            autoComplete="off"
+            className="settings-text-input mt-2 w-full"
+            placeholder="https://example.com/image"
+            value={draft.background_image_url}
+            onChange={(event) => setDraft((current) => ({ ...current, background_image_url: event.target.value }))}
+          />
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">填写直接返回图片的 API 地址，一张图会自动适配手机与电脑。留空则使用默认背景。图片地址会对访客公开。</p>
+        </fieldset>
 
         <fieldset className="mt-6 border-t border-border pt-5">
           <legend className="text-sm font-semibold">延迟监控</legend>

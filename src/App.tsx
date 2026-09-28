@@ -152,7 +152,8 @@ export default function App() {
   if (!me.public_page && !me.authed) return null
 
   return (
-    <div className="app-shell min-h-svh">
+    <div className={`app-shell min-h-svh ${siteConfig.background_image_url ? "has-background-image" : ""}`}>
+      {siteConfig.background_image_url && <BackgroundImage key={siteConfig.background_image_url} url={siteConfig.background_image_url} />}
       <header className="app-header sticky top-0 z-10">
         <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-5 py-4 sm:px-8">
           {/* The site name is the way back to the list, so a node page needs
@@ -207,6 +208,15 @@ export default function App() {
       {settingsOpen && me.authed && <ThemeSettings config={siteConfig} onClose={() => setSettingsOpen(false)} onSaved={applySettings} />}
     </div>
   )
+}
+
+function BackgroundImage({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return <div className="background-scene" aria-hidden="true">
+    <img src={url} alt="" decoding="async" onError={() => setFailed(true)} />
+    <span className="background-scrim" />
+  </div>
 }
 
 // Group tabs sit beside the node heading, while the summary follows the selection.

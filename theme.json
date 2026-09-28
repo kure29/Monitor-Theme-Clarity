@@ -2,7 +2,7 @@
   "name": "Clarity",
   "short": "clarity",
   "description": "简洁、清晰的公开状态页，支持多种节点视图与站点级设置",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "author": "kure29",
   "url": "https://github.com/kure29/Monitor-Theme-Clarity",
   "config": [
@@ -24,6 +24,13 @@
       "type": "boolean",
       "label": "显示顶部概览",
       "default": true
+    },
+    { "type": "title", "label": "页面背景" },
+    {
+      "key": "background_image_url",
+      "type": "string",
+      "label": "背景图片 API 地址",
+      "default": ""
     },
     { "type": "title", "label": "延迟监控" },
     {

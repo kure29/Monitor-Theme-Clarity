@@ -137,6 +137,12 @@
 .dark .app-shell {
   background: radial-gradient(ellipse 1100px 480px at 50% -230px, #202d42 0, transparent 75%), var(--background);
 }
+.app-shell.has-background-image { position: relative; isolation: isolate; background: transparent; }
+.background-scene { position: fixed; z-index: -1; inset: 0; overflow: hidden; pointer-events: none; }
+.background-scene img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.background-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, #f5f6f899, #f5f6f8bd); }
+.dark .background-scrim { background: linear-gradient(180deg, #111318aa, #111318d1); }
+.has-background-image .app-header { background: color-mix(in srgb, var(--card) 82%, transparent); }
 .app-header {
   background: color-mix(in srgb, var(--background) 80%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
@@ -153,18 +159,21 @@
 .dark .surface-card, .dark .detail-facts, .dark .chart-panel {
   box-shadow: 0 10px 30px #00000026;
 }
-.summary-tile { min-height: 148px; }
-.summary-grid .summary-tile:last-child { grid-column: span 2; }
-@media (min-width: 1024px) {
-  .summary-grid .summary-tile:last-child { grid-column: auto; }
+.summary-tile {
+  min-height: 148px;
+  border: 1px solid color-mix(in srgb, var(--tile-accent) 18%, var(--border));
+  background: linear-gradient(138deg, color-mix(in srgb, var(--tile-tint) 55%, var(--card)), color-mix(in srgb, var(--card) 94%, transparent) 78%);
 }
-.summary-grid .summary-tile:first-child {
-  background: #e9f2ff;
-}
-.dark .summary-grid .summary-tile:first-child { background: #1f314b; }
-.summary-grid .summary-tile:first-child [class*=text-muted-foreground] { color: #375a88; }
-.dark .summary-grid .summary-tile:first-child [class*=text-muted-foreground] { color: #bbd4f4; }
-.summary-tile svg { color: var(--primary); }
+.summary-grid .summary-tile:nth-child(1) { --tile-tint: #cde2ff; --tile-accent: #2573cc; }
+.summary-grid .summary-tile:nth-child(2) { --tile-tint: #d0f1e8; --tile-accent: #208b78; }
+.summary-grid .summary-tile:nth-child(3) { --tile-tint: #e5dcff; --tile-accent: #7963c5; }
+.summary-grid .summary-tile:nth-child(4) { --tile-tint: #ffe6ce; --tile-accent: #ac7137; }
+.dark .summary-grid .summary-tile:nth-child(1) { --tile-tint: #29466b; --tile-accent: #83b9ff; }
+.dark .summary-grid .summary-tile:nth-child(2) { --tile-tint: #24463f; --tile-accent: #71d2ba; }
+.dark .summary-grid .summary-tile:nth-child(3) { --tile-tint: #3d3458; --tile-accent: #b9a6ff; }
+.dark .summary-grid .summary-tile:nth-child(4) { --tile-tint: #4a392c; --tile-accent: #edbb87; }
+.summary-tile svg { color: var(--tile-accent); }
+.summary-tile .cost-rows { overflow-wrap: anywhere; }
 .summary-tile .tnum { font-variant-numeric: tabular-nums; }
 .group-tabs button { border-radius: 999px; }
 .group-tabs button[aria-pressed=true] { background: var(--primary); color: var(--primary-foreground); }
@@ -174,6 +183,18 @@
   min-height: 286px;
   transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms ease;
 }
+.node-grid > :is(.node-card, .compact-node-card, .mini-node-card) {
+  border: 1px solid color-mix(in srgb, var(--node-accent) 16%, var(--border));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--node-tint) 50%, var(--card)), color-mix(in srgb, var(--card) 95%, transparent) 72%);
+}
+.node-grid > :nth-child(4n+1) { --node-tint: #d5e8ff; --node-accent: #4386d4; }
+.node-grid > :nth-child(4n+2) { --node-tint: #d8f2e9; --node-accent: #439f83; }
+.node-grid > :nth-child(4n+3) { --node-tint: #e9e2ff; --node-accent: #8c75ca; }
+.node-grid > :nth-child(4n+4) { --node-tint: #ffead7; --node-accent: #c18b54; }
+.dark .node-grid > :nth-child(4n+1) { --node-tint: #2c4260; --node-accent: #74aff2; }
+.dark .node-grid > :nth-child(4n+2) { --node-tint: #254439; --node-accent: #73cfac; }
+.dark .node-grid > :nth-child(4n+3) { --node-tint: #403751; --node-accent: #b7a2ee; }
+.dark .node-grid > :nth-child(4n+4) { --node-tint: #48392e; --node-accent: #e5b489; }
 @media (hover: hover) and (pointer: fine) {
   .node-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px #1c293a18; }
 }
@@ -235,6 +256,10 @@
   width: 100%; padding: 15px 20px; border-top: 1px solid var(--border);
   text-align: left; font-size: 13px; transition: background-color 150ms ease;
 }
+.list-node-row:nth-child(4n+2) { background: color-mix(in srgb, #cde3fc 12%, var(--card)); }
+.list-node-row:nth-child(4n+3) { background: color-mix(in srgb, #cfeee2 12%, var(--card)); }
+.list-node-row:nth-child(4n+4) { background: color-mix(in srgb, #e5dcfc 12%, var(--card)); }
+.list-node-row:nth-child(4n+5) { background: color-mix(in srgb, #f8e2ce 12%, var(--card)); }
 .list-node-row:hover { background: var(--accent); }
 .list-node-row:active { background: var(--secondary); }
 .list-node-identity strong { font-size: 13px; font-weight: 600; }
@@ -257,6 +282,8 @@
 .settings-toggle { padding: 18px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .settings-toggle small { font-size: 11px; }
 .settings-toggle input { width: 18px; height: 18px; accent-color: var(--primary); }
+.settings-text-input { min-height: 42px; padding: 9px 12px; border: 1px solid var(--input); border-radius: 10px; background: var(--background); color: var(--foreground); font-size: 14px; }
+.settings-text-input::placeholder { color: var(--muted-foreground); }
 .settings-secondary, .settings-primary { padding: 9px 15px; border-radius: 9px; font-size: 13px; font-weight: 600; }
 .settings-secondary { background: var(--muted); }
 .settings-primary { background: var(--primary); color: var(--primary-foreground); }
@@ -275,10 +302,9 @@
 .detail-tab:active { transform: scale(.97); }
 
 @media (max-width: 639px) {
-  .summary-tile { min-height: 146px; }
+  .summary-tile { min-height: 146px; padding: 17px; }
   .summary-tile .tnum.text-3xl { font-size: 1.6rem; }
   .chart-panel { padding: 18px 12px; }
-  .summary-grid .summary-tile:last-child .tnum.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .section-heading .group-tabs { width: 100%; }
   .mini-node-card { padding: 14px; }
   .mini-node-card h3 { font-size: 12px; }

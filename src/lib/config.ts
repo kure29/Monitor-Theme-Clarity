@@ -6,6 +6,7 @@ export type ThemeConfig = {
   card_mode: ViewMode
   show_summary: boolean
   show_carrier_latency: boolean
+  background_image_url: string
 }
 
 type Field = { key: string; type: string; default: unknown; options?: { value: string }[] }
@@ -19,7 +20,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function fits(field: Field, value: unknown): boolean {
   if (field.type === "boolean") return typeof value === "boolean"
   if (field.type === "select") return field.options?.some((option) => option.value === value) ?? false
+  if (field.key === "background_image_url") return typeof value === "string" && isBackgroundImageUrl(value)
   return typeof value === "string"
+}
+
+export function isBackgroundImageUrl(value: string): boolean {
+  const url = value.trim()
+  if (!url) return true
+  if (!/^https?:\/\//i.test(url) && !/^\/(?!\/)/.test(url)) return false
+  try {
+    const parsed = new URL(url, "https://example.invalid")
+    return (parsed.protocol === "https:" || parsed.protocol === "http:") && !parsed.username && !parsed.password
+  } catch {
+    return false
+  }
 }
 
 function withDefaults(saved: Record<string, unknown>): ThemeConfig {

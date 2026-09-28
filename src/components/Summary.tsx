@@ -1,7 +1,8 @@
-import { ArrowDown, ArrowDownUp, ArrowUp, Gauge, Server } from "lucide-react"
+import { ArrowDown, ArrowDownUp, ArrowUp, Gauge, Server, Wallet } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { speedHistory, type Node } from "@/lib/api"
+import { costByCurrency, costMoney } from "@/lib/cost"
 import { bytes, rate } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -48,7 +49,7 @@ function Spark({ series }: { series: { values: number[]; className: string }[] }
   const top = Math.max(...series.flatMap((s) => s.values), 1)
   const width = Math.max(...series.map((s) => s.values.length), 2) - 1
   return (
-    <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="h-7 w-full" aria-hidden>
+    <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="h-5 w-full" aria-hidden>
       {series.map((s, i) => (
         <polyline
           key={i}
@@ -73,9 +74,10 @@ export function Summary({ nodes, group }: { nodes: Node[]; group: string | null 
   // is that line's last point.
   const history = speedHistory.get(group) ?? []
   const now = history.at(-1) ?? { rx: 0, tx: 0 }
+  const costs = costByCurrency(nodes)
 
   return (
-    <div className="summary-grid grid grid-cols-2 gap-4 lg:grid-cols-3">
+    <div className="summary-grid grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       <Tile icon={Server} label="节点">
         <div className="tnum mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">
           {online.length} / {nodes.length}
@@ -96,7 +98,7 @@ export function Summary({ nodes, group }: { nodes: Node[]; group: string | null 
       </Tile>
 
       <Tile icon={Gauge} label="实时网速">
-        <Flow down={rate(now.rx)} up={rate(now.tx)} className="mt-1 text-sm font-semibold" />
+        <Flow down={rate(now.rx)} up={rate(now.tx)} className="mt-2 text-sm font-semibold" />
         <div className="mt-auto pt-1">
           <Spark
             series={[
@@ -105,6 +107,31 @@ export function Summary({ nodes, group }: { nodes: Node[]; group: string | null 
             ]}
           />
         </div>
+      </Tile>
+
+      <Tile icon={Wallet} label="服务器费用">
+        {costs.length === 0 ? (
+          <div className="mt-auto text-sm text-muted-foreground">暂无定价</div>
+        ) : (
+          <>
+            <div className="cost-rows mt-2 space-y-1.5">
+              {costs.map(({ currency, monthly }) => (
+                <div key={currency} className="flex min-w-0 items-baseline justify-between gap-1.5">
+                  <span className="shrink-0 text-[11px] text-muted-foreground">月均</span>
+                  <strong className="tnum min-w-0 text-right text-sm font-semibold" title={`${currency} 月均 ${costMoney(monthly, currency, true)}`}>
+                    {costMoney(monthly, currency, costs.length > 1)}
+                  </strong>
+                </div>
+              ))}
+            </div>
+            <div className="cost-annual mt-auto flex flex-wrap gap-x-1.5 pt-2 text-[11px] text-muted-foreground">
+              <span>年化</span>
+              {costs.map(({ currency, annual }) => (
+                <span className="tnum" key={currency}>{costMoney(annual, currency, costs.length > 1)}</span>
+              ))}
+            </div>
+          </>
+        )}
       </Tile>
     </div>
   )

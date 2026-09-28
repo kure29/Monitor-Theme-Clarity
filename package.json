@@ -1,13 +1,13 @@
 {
   "name": "monitor-theme-clarity",
   "private": true,
-  "version": "0.2.5",
+  "version": "0.2.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node src/lib/format.test.ts && node src/lib/api.test.ts && node src/lib/carrierLatency.test.ts",
+    "test": "node src/lib/format.test.ts && node src/lib/api.test.ts && node src/lib/carrierLatency.test.ts && node src/lib/cost.test.ts",
     "preview": "vite preview",
     "package": "sh scripts/package.sh"
   },

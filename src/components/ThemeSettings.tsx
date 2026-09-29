@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react"
-import { Check, X } from "lucide-react"
+import { Activity, CalendarDays, CalendarRange, ChartNoAxesCombined, Check, Grid2X2, ImageIcon, Layers3, LayoutDashboard, List, Network, Wallet, X } from "lucide-react"
 
 import { isBackgroundImageUrl, saveConfig, type CostMode, type ThemeConfig, type ViewMode } from "@/lib/config"
 
-const OPTIONS: { mode: ViewMode; label: string; help: string }[] = [
-  { mode: "large", label: "大卡片", help: "显示完整资源与流量" },
-  { mode: "compact", label: "小卡片", help: "缩短卡片，保留资源概况" },
-  { mode: "mini", label: "迷你卡片", help: "快速扫视节点与关键指标" },
-  { mode: "list", label: "列表", help: "在一行内比较多个节点" },
-]
-const COST_OPTIONS: { mode: CostMode; label: string }[] = [
-  { mode: "daily", label: "日均" },
-  { mode: "monthly", label: "月均" },
-  { mode: "total", label: "总费用" },
-]
+const OPTIONS = [
+  { mode: "large", label: "大卡片", help: "完整资源", icon: LayoutDashboard },
+  { mode: "compact", label: "小卡片", help: "资源概况", icon: Grid2X2 },
+  { mode: "mini", label: "迷你卡片", help: "快速扫视", icon: Layers3 },
+  { mode: "list", label: "列表", help: "横向比较", icon: List },
+] satisfies { mode: ViewMode; label: string; help: string; icon: typeof LayoutDashboard }[]
+const COST_OPTIONS = [
+  { mode: "daily", label: "日均", icon: CalendarDays },
+  { mode: "monthly", label: "月均", icon: CalendarRange },
+  { mode: "total", label: "总费用", icon: Wallet },
+] satisfies { mode: CostMode; label: string; icon: typeof Wallet }[]
 
 export function ThemeSettings({ config, onClose, onSaved }: {
   config: ThemeConfig
@@ -56,10 +56,10 @@ export function ThemeSettings({ config, onClose, onSaved }: {
           <button type="button" className="settings-close" onClick={onClose} aria-label="关闭主题设置"><X className="size-4" /></button>
         </div>
 
-        <fieldset className="mt-7">
-          <legend className="text-sm font-semibold">节点展示方式</legend>
-          <div className="settings-options mt-3 grid grid-cols-2 gap-2">
-            {OPTIONS.map(({ mode, label, help }) => (
+        <fieldset className="settings-section mt-7">
+          <legend className="settings-legend"><span className="settings-section-icon"><Layers3 aria-hidden /></span>节点展示方式</legend>
+          <div className="settings-options mt-4 grid grid-cols-2 gap-2">
+            {OPTIONS.map(({ mode, label, help, icon: Icon }) => (
               <button
                 key={mode}
                 type="button"
@@ -67,23 +67,24 @@ export function ThemeSettings({ config, onClose, onSaved }: {
                 aria-pressed={draft.card_mode === mode}
                 onClick={() => setDraft((current) => ({ ...current, card_mode: mode }))}
               >
-                <span className="flex items-center justify-between gap-2 font-medium">{label}{draft.card_mode === mode && <Check className="size-4" />}</span>
-                <small className="mt-1 block text-muted-foreground">{help}</small>
+                <span className="flex items-start justify-between gap-2"><span className="settings-option-icon"><Icon aria-hidden /></span>{draft.card_mode === mode && <Check className="settings-option-check size-4" aria-hidden />}</span>
+                <span className="mt-3 block font-semibold">{label}</span>
+                <small className="mt-0.5 block text-muted-foreground">{help}</small>
               </button>
             ))}
           </div>
         </fieldset>
 
-        <label className="settings-toggle mt-6 flex items-center justify-between gap-4">
-          <span><strong className="block text-sm">显示顶部概览</strong><small className="mt-1 block text-muted-foreground">节点、流量、网速与服务器费用</small></span>
-          <input type="checkbox" checked={draft.show_summary} onChange={(event) => setDraft((current) => ({ ...current, show_summary: event.target.checked }))} />
+        <label className="settings-toggle mt-5 flex items-center justify-between gap-4">
+          <span className="flex min-w-0 items-center gap-3"><span className="settings-section-icon"><ChartNoAxesCombined aria-hidden /></span><span><strong className="block text-sm">显示顶部概览</strong><small className="mt-1 block text-muted-foreground">节点、流量、网速与费用</small></span></span>
+          <input className="settings-switch" type="checkbox" checked={draft.show_summary} onChange={(event) => setDraft((current) => ({ ...current, show_summary: event.target.checked }))} />
         </label>
 
-        <fieldset className="mt-6 border-t border-border pt-5">
-          <legend className="text-sm font-semibold">服务器费用</legend>
+        <fieldset className="settings-section mt-6">
+          <legend className="settings-legend"><span className="settings-section-icon"><Wallet aria-hidden /></span>服务器费用</legend>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            {COST_OPTIONS.map(({ mode, label }) => (
-              <label key={mode} className="settings-cost-option flex cursor-pointer items-center justify-center text-center text-sm font-medium">
+            {COST_OPTIONS.map(({ mode, label, icon: Icon }) => (
+              <label key={mode} className="settings-cost-option flex cursor-pointer flex-col items-center justify-center gap-1.5 text-center text-sm font-medium">
                 <input
                   className="sr-only"
                   type="radio"
@@ -92,15 +93,15 @@ export function ThemeSettings({ config, onClose, onSaved }: {
                   checked={draft.cost_display_mode === mode}
                   onChange={() => setDraft((current) => ({ ...current, cost_display_mode: mode }))}
                 />
-                {label}
+                <Icon className="size-[18px]" aria-hidden />{label}
               </label>
             ))}
           </div>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">根据后台填写的价格与付款周期折算。总费用按一年计算，一次性购买不计入。</p>
         </fieldset>
 
-        <fieldset className="mt-6 border-t border-border pt-5">
-          <legend className="text-sm font-semibold">页面背景</legend>
+        <fieldset className="settings-section mt-6">
+          <legend className="settings-legend"><span className="settings-section-icon"><ImageIcon aria-hidden /></span>页面背景</legend>
           <label htmlFor="background-image-url" className="mt-3 block text-xs text-muted-foreground">背景图片 API 地址</label>
           <input
             id="background-image-url"
@@ -130,11 +131,11 @@ export function ThemeSettings({ config, onClose, onSaved }: {
           <p className="mt-1 text-xs text-muted-foreground">调整卡片和详情面板；数值越大，背景越明显。滚动后的顶栏会保持清晰。</p>
         </fieldset>
 
-        <fieldset className="mt-6 border-t border-border pt-5">
-          <legend className="text-sm font-semibold">延迟监控</legend>
+        <fieldset className="settings-section mt-6">
+          <legend className="settings-legend"><span className="settings-section-icon"><Network aria-hidden /></span>延迟监控</legend>
           <label className="mt-3 flex items-center justify-between gap-4 text-sm">
-            <span>在节点视图显示</span>
-            <input type="checkbox" className="size-[18px] accent-primary" checked={draft.show_carrier_latency} onChange={(event) => setDraft((current) => ({ ...current, show_carrier_latency: event.target.checked }))} />
+            <span className="flex items-center gap-2"><Activity className="size-4 text-primary" aria-hidden />在节点视图显示</span>
+            <input type="checkbox" className="settings-switch" checked={draft.show_carrier_latency} onChange={(event) => setDraft((current) => ({ ...current, show_carrier_latency: event.target.checked }))} />
           </label>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">自动显示 monitor 后台分配给各节点的 TCP 探测任务与最近结果，无需在主题里配置任务名称。</p>
         </fieldset>

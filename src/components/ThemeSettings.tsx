@@ -128,7 +128,7 @@ export function ThemeSettings({ config, onClose, onSaved }: {
             value={draft.global_transparency}
             onChange={(event) => setDraft((current) => ({ ...current, global_transparency: Number(event.target.value) }))}
           />
-          <p className="mt-1 text-xs text-muted-foreground">调整卡片和详情面板；数值越大，背景越明显。滚动后的顶栏会保持清晰。</p>
+          <p className="mt-1 text-xs text-muted-foreground">设置背景图片后生效，调整卡片和详情面板；数值越大，背景越明显。滚动后的顶栏会保持清晰。</p>
         </fieldset>
 
         <fieldset className="settings-section mt-6">

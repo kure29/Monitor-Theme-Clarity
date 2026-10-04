@@ -2,7 +2,7 @@
   "name": "Clarity",
   "short": "clarity",
   "description": "简洁、清晰的公开状态页，支持多种节点视图与站点级设置",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "author": "kure29",
   "url": "https://github.com/kure29/Monitor-Theme-Clarity",
   "config": [
@@ -52,7 +52,7 @@
       "default": 20,
       "min": 0,
       "max": 70,
-      "help": "调整卡片与详情面板的透明度；滚动后的顶栏会保持清晰"
+      "help": "设置背景图片后生效，调整卡片与详情面板的透明度；滚动后的顶栏会保持清晰"
     },
     { "type": "title", "label": "延迟监控" },
     {

@@ -13,7 +13,7 @@ function Tile({ icon: Icon, label, children }: {
 }) {
   return (
     <Card className="summary-tile gap-0 p-5 sm:p-6">
-      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+      <div className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground">
         <Icon className="size-4" />
         {label}
       </div>
@@ -58,7 +58,7 @@ function Spark({ series }: { series: { values: number[]; className: string }[] }
           className={s.className}
           fill="none"
           stroke="currentColor"
-          strokeWidth={1.25}
+          strokeWidth={1.5}
           vectorEffect="non-scaling-stroke"
           points={s.values.map((v, x) => `${(x / width) * 100},${23 - (v / top) * 22}`).join(" ")}
         />
@@ -94,7 +94,7 @@ export function Summary({ nodes, group, costMode, stale }: { nodes: Node[]; grou
   return (
     <div className="summary-grid grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       <Tile icon={Server} label="节点">
-        <div className="tnum mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <div className="tnum summary-value mt-4 text-4xl font-semibold">
           {online.length} / {nodes.length}
         </div>
         <div className="mt-auto pt-2 text-xs text-muted-foreground">
@@ -106,19 +106,19 @@ export function Summary({ nodes, group, costMode, stale }: { nodes: Node[]; grou
         <Flow
           down={bytes(sum((n) => n.day_rx))}
           up={bytes(sum((n) => n.day_tx))}
-          className="mt-1 text-sm font-semibold"
+          className="summary-value mt-3 text-lg font-semibold"
         />
-        <div className="mt-2 text-xs text-muted-foreground">总流量</div>
-        <Flow down={bytes(sum((n) => n.total_rx))} up={bytes(sum((n) => n.total_tx))} className="mt-0.5 text-sm" />
+        <div className="mt-auto pt-2 text-xs text-muted-foreground">总流量</div>
+        <Flow down={bytes(sum((n) => n.total_rx))} up={bytes(sum((n) => n.total_tx))} className="mt-0.5 text-[13px] text-muted-foreground" />
       </Tile>
 
       <Tile icon={Gauge} label={stale ? "上次网速" : "实时网速"}>
-        <Flow down={rate(now.rx)} up={rate(now.tx)} className="mt-2 text-sm font-semibold" />
+        <Flow down={rate(now.rx)} up={rate(now.tx)} className="summary-value mt-3 text-lg font-semibold" />
         <div className="mt-auto pt-1">
           <Spark
             series={[
-              { values: history.map((s) => s.rx), className: "text-foreground" },
-              { values: history.map((s) => s.tx), className: "text-muted-foreground" },
+              { values: history.map((s) => s.rx), className: "text-primary" },
+              { values: history.map((s) => s.tx), className: "text-muted-foreground opacity-60" },
             ]}
           />
         </div>
@@ -129,7 +129,7 @@ export function Summary({ nodes, group, costMode, stale }: { nodes: Node[]; grou
           <div className="mt-auto text-sm text-muted-foreground">暂无定价</div>
         ) : (
           <>
-            <div className="tnum mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">
+            <div className="tnum summary-value mt-4 text-3xl font-semibold sm:text-4xl">
               {monthlyCost === null
                 ? <span className="text-sm text-muted-foreground">{rateError ? "汇率暂不可用" : rateData ? "币种汇率缺失" : "汇率加载中…"}</span>
                 : costMoney(costForMode(monthlyCost, costMode), "CNY")}

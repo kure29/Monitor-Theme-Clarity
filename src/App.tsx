@@ -178,7 +178,7 @@ export default function App() {
     >
       {siteConfig.background_image_url && <BackgroundImage key={siteConfig.background_image_url} url={siteConfig.background_image_url} />}
       <header className={`app-header sticky top-0 z-10 ${headerScrolled ? "is-scrolled" : ""}`}>
-        <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-5 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-[1360px] items-center gap-3 px-5 py-2.5 sm:px-8">
           {/* The site name is the way back to the list, so a node page needs
               no back button of its own. */}
           <button className="brand-mark min-w-0 truncate font-semibold transition-opacity hover:opacity-70" onClick={() => go(null)}>
@@ -203,7 +203,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1360px] space-y-7 px-5 py-9 sm:px-8 sm:py-12">
+      <main className="mx-auto max-w-[1360px] space-y-8 px-5 py-6 sm:px-8 sm:py-10">
         <FreshnessNotice error={error} lastUpdated={lastUpdated} stale={stale} />
 
         {open !== null && (
@@ -297,24 +297,22 @@ function NodeList({ nodes, group, onGroup, onOpen, config, stale }: {
       <section className="node-section">
         <div className="section-heading flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-baseline gap-3">
-            <h1 className="text-xl font-semibold tracking-tight">节点</h1>
+            <h1 className="text-2xl font-bold tracking-tight">节点</h1>
             <span className="text-sm text-muted-foreground">{shown.length} 台设备</span>
           </div>
-          {groups.length > 0 && <div role="group" aria-label="分组" className="group-tabs -mx-1 flex max-w-full gap-1 overflow-x-auto px-1 pb-1">
+          {groups.length > 0 && <div role="group" aria-label="分组" className="group-tabs segmented">
             {tabs.map(([value, label, count]) => (
-              <Button
+              <button
                 // Group names are free text, so they carry a prefix no key of
                 // the 全部 tab can share.
                 key={value === null ? "*" : `=${value}`}
+                type="button"
                 aria-pressed={current === value}
-                size="sm"
-                variant={current === value ? "secondary" : "ghost"}
-                className="shrink-0"
                 onClick={() => onGroup(value)}
               >
                 {label}
-                <span className="tnum text-muted-foreground">{count}</span>
-              </Button>
+                <span className="tnum">{count}</span>
+              </button>
             ))}
           </div>}
         </div>

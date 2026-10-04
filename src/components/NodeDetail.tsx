@@ -85,20 +85,16 @@ const TABS = [
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="chart-panel">
-      <h2 className="mb-5 text-sm font-semibold">{title}</h2>
+      <h2 className="mb-5 text-[15px] font-semibold tracking-tight">{title}</h2>
       <div className="h-44 w-full text-muted-foreground">{children}</div>
     </div>
   )
 }
 
+/** One segment of a `.segmented` control. */
 function Tab({ active, onClick, children }: { active: boolean; onClick: () => void; children: string }) {
   return (
-    <button
-      onClick={onClick}
-      className={`detail-tab rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
-        active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
-      }`}
-    >
+    <button type="button" onClick={onClick} aria-pressed={active}>
       {children}
     </button>
   )
@@ -307,7 +303,7 @@ export function NodeDetail({ node }: { node: Node }) {
   return (
     <div className="detail-view space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="truncate text-3xl font-semibold tracking-tight sm:text-4xl">{node.name}</h1>
+        <h1 className="truncate text-3xl font-bold tracking-tight sm:text-4xl">{node.name}</h1>
         <Country node={node} />
         <Status node={node} />
         {node.agent_version && (
@@ -350,8 +346,8 @@ export function NodeDetail({ node }: { node: Node }) {
         <p className="rounded-md bg-muted px-3 py-2 text-sm whitespace-pre-wrap">{node.remark}</p>
       )}
 
-      <div className="detail-controls space-y-3 pt-2">
-        <div className="flex gap-1">
+      <div className="detail-controls flex flex-wrap items-center gap-x-4 gap-y-3 pt-2">
+        <div className="segmented" role="group" aria-label="图表">
           {TABS.map((t) => (
             <Tab key={t.key} active={tab === t.key} onClick={() => setTab(t.key)}>
               {t.label}
@@ -359,7 +355,7 @@ export function NodeDetail({ node }: { node: Node }) {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <div className="flex gap-1">
+          <div className="segmented" role="group" aria-label="时间范围">
             {RANGES_FOR[tab].map((r) => (
               <Tab
                 key={r.hours}

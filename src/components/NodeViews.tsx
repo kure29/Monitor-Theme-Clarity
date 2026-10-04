@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp } from "lucide-react"
 
 import { Country, Status } from "@/components/NodeCard"
 import { CarrierLatency } from "@/components/CarrierLatency"
+import { level } from "@/components/Meter"
 import type { Node } from "@/lib/api"
 import type { ThemeConfig } from "@/lib/config"
 import { osName, percent, rate } from "@/lib/format"
@@ -25,10 +26,10 @@ function ResourceStat({ label, value }: { label: string; value: number | null })
     <div className="resource-stat">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-xs text-muted-foreground">{label}</span>
-        <span className="tnum text-sm font-semibold">{usage(value)}</span>
+        <span className="tnum text-[15px] font-semibold tracking-tight">{usage(value)}</span>
       </div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-        <span className="resource-fill block h-full rounded-full" style={{ width: `${width}%` }} />
+      <div className="meter-track mt-2 h-1.5 overflow-hidden rounded-full">
+        <span className="resource-fill block h-full rounded-full" data-level={level(value)} style={{ width: `${width}%` }} />
       </div>
     </div>
   )
